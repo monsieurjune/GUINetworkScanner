@@ -1,6 +1,7 @@
 use std::vec::Vec;
 mod fullscan;
 mod quickscan;
+mod debug;
 
 pub struct ScanMode
 {
@@ -13,9 +14,10 @@ impl ScanMode
 {
     pub fn new(mode: usize) -> ScanMode
     {
-        static PORTLIST: [fn() -> (u16, u16, Option<Vec<u16>>); 2] = [
+        static PORTLIST: [fn() -> (u16, u16, Option<Vec<u16>>); 3] = [
             fullscan::fullscan,
-            quickscan::quickscan
+            quickscan::quickscan,
+            debug::debug1
         ];
 
         let run: (u16, u16, Option<Vec<u16>>) = PORTLIST[mode]();
