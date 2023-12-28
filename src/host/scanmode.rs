@@ -13,19 +13,27 @@ impl ScanMode
 {
     pub fn new(mode: usize) -> ScanMode
     {
-        static PORTLIST: [fn() -> (u16, u16, Option<Vec<u16>>); 2] = 
-        [
+        static PORTLIST: [fn() -> (u16, u16, Option<Vec<u16>>); 2] = [
             fullscan::fullscan,
             quickscan::quickscan
         ];
 
         let run: (u16, u16, Option<Vec<u16>>) = PORTLIST[mode]();
 
-        return ScanMode
-        {
+        return ScanMode {
             lower: run.0,
             upper: run.1,
             portlist: run.2
         }
+    }
+
+    pub fn get_portlist(&self) -> Option<Vec<u16>>
+    {
+        return self.portlist.clone();
+    }
+
+    pub fn get_limit(&self) -> (u16, u16)
+    {
+        return (self.lower, self.upper);
     }
 }
