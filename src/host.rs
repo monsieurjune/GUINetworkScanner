@@ -32,23 +32,38 @@ impl Host
         }
     }
 
-    // fn thread_spawn()
-    // {
+    fn thread_spawner(port_no: u16) -> Result<thread::JoinHandle<()>, std::io::Error>
+    {
+        let builder: thread::Builder;
 
-    // }
+        builder = thread::Builder::new().name(port_no.to_string());
+        return builder.spawn( || {
+            todo!();
+        });
+    }
 
-    // fn
+    fn thread_joiner(thread_handler: Vec<thread::JoinHandle<()>>) -> Vec<Result<(), Box<(dyn Any + Send + 'static)>>>
+    {
+        let mut res:Result<(), Box<(dyn Any + Send + 'static)>>;
+        let mut handler_result: Vec<Result<(), Box<(dyn Any + Send + 'static)>>> = Vec::new();
+
+        for handler in thread_handler
+        {
+            res = handler.join();
+            handler_result.push(res);
+        }
+        return handler_result;
+    }
 
     pub fn scan(&self)
     {
         let port_limit: (u16, u16);
-        let mut handler: thread::JoinHandle<()>;
         let mut thread_handlers: Vec<thread::JoinHandle<()>> = Vec::new();
-        let mut thread_results: Vec<Result<(), Box<(dyn Any + Send + 'static)>>> = Vec::new();
+        let mut thread_results: Vec<Result<(), Box<(dyn Any + Send + 'static)>>>;
 
         match self.scan_mode.get_portlist()
         {
-            Some(_portlist) => {
+            Some(portlist) => {
                 // for port in portlist
                 // {
                 //     handler = thread::spawn(move ||{
@@ -61,29 +76,19 @@ impl Host
                 port_limit = self.scan_mode.get_limit();
                 for i in port_limit.0..port_limit.1
                 {
-                    handler = thread::spawn(move ||{
-                        println!("{i}");
-                    });
-                }
-
-                for thread_status in thread_handlers
-                {
-                    let res:Result<(), Box<(dyn Any + Send + 'static)>> = thread_status.join();
-                    thread_results.push(res);
-                }
-                
-                for res in thread_results
-                {
-                    match res
+                    match Host::thread_spawner(i)
                     {
-                        Ok(_) => {
-                            // println!("Ok");
+                        Ok(handler) => {
+                            thread_handlers.push(handler);
                         }
                         Err(_) => {
-                            panic!("Err");
+                            eprintln!("Thread allocation failed, stop making more thread");
+                            break;
                         }
                     }
                 }
+                thread_results = Host::thread_joiner(thread_handlers);
+                // Wait for writing Error handler
             }
         }
     }
