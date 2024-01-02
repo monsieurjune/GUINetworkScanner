@@ -1,11 +1,11 @@
 <mxfile host="65bd71144e">
     <diagram id="cOlsokg0wopFhThmWkgF" name="Page-1">
-        <mxGraphModel dx="1470" dy="1048" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1470" dy="719" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="42" value="Host" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=default;fontFamily=Helvetica;fontSize=14;fontColor=default;fillColor=none;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="34" y="149" width="356" height="164" as="geometry"/>
+                    <mxGeometry x="160" y="149" width="356" height="164" as="geometry"/>
                 </mxCell>
                 <mxCell id="43" value="- ipv4 : std::net::IpAddr" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" parent="42" vertex="1">
                     <mxGeometry y="26" width="356" height="26" as="geometry"/>
@@ -29,7 +29,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="47" value="ScanMode" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=14;" parent="1" vertex="1">
-                    <mxGeometry x="524" y="80" width="336" height="216" as="geometry"/>
+                    <mxGeometry x="650" y="80" width="336" height="216" as="geometry"/>
                 </mxCell>
                 <mxCell id="52" value="- lowerRange : u16" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" parent="47" vertex="1">
                     <mxGeometry y="26" width="336" height="26" as="geometry"/>
