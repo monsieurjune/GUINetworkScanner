@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use lazy_static::lazy_static;
 
 pub struct ScanMode
@@ -7,7 +8,7 @@ pub struct ScanMode
     lower: u16,
     upper: u16,
     portlist: Option<Vec<u16>>,
-	partition_size: usize
+	partition_size: u16
 }
 
 fn create_hashmap() -> HashMap<String, (u16, u16, Option<Vec<u16>>)>
@@ -54,10 +55,11 @@ impl ScanMode
 		}
     }
 
-	pub fn subset_len(&self) -> usize
+	pub fn subset_len(&self) -> u16
 	{
 		let vec_len: usize;
 		let ceil: usize;
+		let len: usize;
 
 		match &self.portlist
 		{
@@ -68,16 +70,55 @@ impl ScanMode
 				vec_len = usize::from(self.upper) - usize::from(self.lower) + 1;
 			}
 		}
-		ceil = if vec_len % self.partition_size > 0 { 1 } else { 0 };
-		return vec_len / self.partition_size + ceil;
+		ceil = if vec_len % usize::from(self.partition_size) > 0 { 1 } else { 0 };
+		len = vec_len / usize::from(self.partition_size) + ceil;
+		return u16::try_from(len % 65536).unwrap();
 	}
 
-	pub fn get_subset(&self, n:usize) -> Vec<u16>
+	fn portlist_slicer(list: &[u16], size: u16) -> Vec<u16>
 	{
-		let set_n: usize = ScanMode::subset_len(self);
+		let mut subset: Vec<u16> = Vec::new();
+
+		for port in list
+		{
+			subset.push(port.clone());
+			if subset.len() >= usize::from(size) { break; }
+		}
+		return subset;
+	}
+
+	fn limit_to_subset(a: u16, b: u16, upper: u16, size: u16) -> Vec<u16>
+	{
+		let b_max: u16 = if b > upper { upper } else { b } + 1;
+		let mut subset: Vec<u16> = Vec::new();
+
+		for port in a..b_max
+		{
+			subset.push(port);
+		}
+		return subset;
+	}
+
+	pub fn get_subset(&self, n:u16) -> Vec<u16>
+	{
+		let set_n: u16 = ScanMode::subset_len(self);
+		let slice: &[u16];
+		let a: u16;
+		let b: u16;
 
 		assert!(n < set_n);
-		return Vec::new();
+		match &self.portlist
+		{
+			Some(list) => {
+				slice = &list[usize::from(n * self.partition_size)..];
+				return ScanMode::portlist_slicer(slice, self.partition_size);
+			}
+			None => {
+				a = self.lower + u16::from(n * self.partition_size);
+				b = a + self.partition_size - 1;
+				return ScanMode::limit_to_subset(a, b, self.upper, self.partition_size);
+			}
+		}
 	}
 }
 
@@ -102,97 +143,84 @@ mod test
 	);
 
 	#[test]
-	fn normal_access()
-	{
+	fn normal_access() {
 		let mode = ScanMode::new(&QUICK);
 		assert!(mode.is_ok());
 	}
 
 	#[test]
-	fn no_key_access()
-	{
+	fn no_key_access() {
 		let mode = ScanMode::new(&"sddfd".to_string());
 		assert!(mode.is_err());
 	}
 
 	#[test]
-	fn priority_check()
-	{
+	fn priority_check() {
 		let mode = ScanMode::new(&PRIORITY);
 		let res = mode.unwrap().subset_len();
 		assert_eq!(res, 1);
 	}
 
-	fn cmp_mode(mode: &String, b: usize)
-	{
+	fn cmp_mode(mode: &String, b: u16) {
 		let mode = ScanMode::new(mode);
 		let a = mode.unwrap().subset_len();
 		assert_eq!(a, b);
 	}
 
 	#[test]
-	fn subset_len_full()
-	{
+	fn subset_len_full() {
 		cmp_mode(&FULL, 4096);
 	}
 
 	#[test]
-	fn subset_len_quick()
-	{
+	fn subset_len_quick() {
 		cmp_mode(&QUICK, 64);
 	}
 
 	#[test]
-	fn subset_len_vec_10()
-	{
+	fn subset_len_vec_10() {
 		cmp_mode(&VEC_10, 1);
 	}
 
 	#[test]
-	fn subset_len_vec_2()
-	{
+	fn subset_len_vec_2() {
 		cmp_mode(&VEC_2, 1);
 	}
 
 	#[test]
-	fn subset_len_vec_16()
-	{
+	fn subset_len_vec_16() {
 		cmp_mode(&VEC_16, 1);
 	}
 
 	#[test]
-	fn subset_len_vec_17()
-	{
+	fn subset_len_vec_17() {
 		cmp_mode(&VEC_17, 2);
 	}
 
 	#[test]
-	fn subset_len_lim_0_0()
-	{
+	fn subset_len_lim_0_0() {
 		cmp_mode(&LIM_0_0, 1);
 	}
 
 	#[test]
-	fn subset_len_lim_0_9999()
-	{
+	fn subset_len_lim_0_9999() {
 		cmp_mode(&LIM_0_9999, 625);
 	}
 
 	#[test]
-	fn subset_len_lim_60000_65535()
-	{
+	fn subset_len_lim_60000_65535() {
 		cmp_mode(&LIM_60000_65535, 346);
 	}
 
 	#[test]
-	fn subset_len_lim_50000_50015()
-	{
+	fn subset_len_lim_50000_50015() {
 		cmp_mode(&LIM_50000_50015, 1);
 	}
 
 	#[test]
-	fn subset_len_lim_50000_50016()
-	{
+	fn subset_len_lim_50000_50016() {
 		cmp_mode(&LIM_50000_50016, 2);
 	}
+
+
 }
