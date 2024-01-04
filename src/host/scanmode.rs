@@ -55,6 +55,7 @@ impl ScanMode
 		match PORTMAP.get(mode)
 		{
 			Some(run) => {
+				assert!(run.0 <= run.1);
 				return Ok(
 					ScanMode {
 						lower: run.0,
@@ -62,13 +63,25 @@ impl ScanMode
 						portlist: run.2.clone(),
 						partition_size: 16
 					}
-				)
+				);
 			}
 			None => {
 				return Err(());
 			}
 		}
     }
+	
+	#[allow(dead_code)]
+	pub fn get_limit(&self) -> (u16, u16)
+	{
+		return (self.lower, self.upper);
+	}
+
+	#[allow(dead_code)]
+	pub fn get_portlist(&self) -> Option<Vec<u16>>
+	{
+		return self.portlist.clone();
+	}
 
 	pub fn subset_len(&self) -> u16
 	{
@@ -109,6 +122,7 @@ impl ScanMode
 		let mut subset: Vec<u16> = Vec::new();
 
 		b_max = if b_max > 65536 { 65536 } else { b_max };
+		assert!(b_max - a_max <= usize::from(size));
 		for port in a_max..b_max
 		{
 			subset.push(u16::try_from(port).unwrap());
