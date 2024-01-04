@@ -3,6 +3,21 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use lazy_static::lazy_static;
 
+lazy_static!(
+	static ref FULL: String = "full".to_string();
+	static ref QUICK: String = "quick".to_string();
+	static ref PRIORITY: String = "debug_priority_check".to_string();
+	static ref VEC_10: String = "debug_vec_10_port".to_string();
+	static ref VEC_2: String = "debug_vec_2_port".to_string();
+	static ref VEC_16: String = "debug_vec_16_port".to_string();
+	static ref VEC_17: String = "debug_vec_17_port".to_string();
+	static ref LIM_0_0: String = "debug_limit_0..0_port".to_string();
+	static ref LIM_0_9999: String = "debug_limit_0..9999_port".to_string();
+	static ref LIM_60000_65535: String = "debug_limit_60000..65535_port".to_string();
+	static ref LIM_50000_50015: String = "debug_limit_50000..50015_port".to_string();
+	static ref LIM_50000_50016: String = "debug_limit_50000..50016_port".to_string();
+);
+
 pub struct ScanMode
 {
     lower: u16,
@@ -14,18 +29,18 @@ pub struct ScanMode
 fn create_hashmap() -> HashMap<String, (u16, u16, Option<Vec<u16>>)>
 {
 	return HashMap::from([
-		("full".to_string(), (0, 65535, None)),
-		("quick".to_string(), (0, 1023, None)),
-		("debug_priority_check".to_string(), (0, 100, Some(vec![1]))),
-		("debug_vec_10_port".to_string(), (0, 0, Some(vec![1, 200, 3, 4, 5, 6, 7, 8, 9, 65]))),
-		("debug_vec_2_port".to_string(), (0, 0, Some(vec![1, 1000]))),
-		("debug_vec_16_port".to_string(), (0, 0, Some(vec![13, 312, 132, 323, 56, 7, 88, 999, 1000, 1100, 1200, 1313, 1441, 15, 160, 0]))),
-		("debug_vec_17_port".to_string(), (0, 0, Some(vec![13, 312, 132, 323, 56, 7, 88, 999, 1000, 1100, 1200, 1313, 1441, 15, 160, 17, 0]))),
-		("debug_limit_0..0_port".to_string(), (0, 0, None)),
-		("debug_limit_0..9999_port".to_string(), (0, 9999, None)),
-		("debug_limit_60000..65535_port".to_string(), (60000, 65535, None)),
-		("debug_limit_50000..50015_port".to_string(), (50000, 50015, None)),
-		("debug_limit_50000..50016_port".to_string(), (50000, 50016, None))
+		(FULL.clone(), (0, 65535, None)),
+		(QUICK.clone(), (0, 1023, None)),
+		(PRIORITY.clone(), (0, 100, Some(vec![1]))),
+		(VEC_10.clone(), (0, 0, Some(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))),
+		(VEC_2.clone(), (0, 0, Some(vec![1, 1000]))),
+		(VEC_16.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515]))),
+		(VEC_17.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515, 1616]))),
+		(LIM_0_0.clone(), (0, 0, None)),
+		(LIM_0_9999.clone(), (0, 9999, None)),
+		(LIM_60000_65535.clone(), (60000, 65535, None)),
+		(LIM_50000_50015.clone(), (50000, 50015, None)),
+		(LIM_50000_50016.clone(), (50000, 50016, None)),
 	]);
 }
 
@@ -89,12 +104,14 @@ impl ScanMode
 
 	fn limit_to_subset(a: u16, b: u16, upper: u16, size: u16) -> Vec<u16>
 	{
-		let b_max: u16 = if b > upper { upper } else { b } + 1;
+		let a_max: usize = usize::from(a); 
+		let mut b_max: usize = usize::from(if b > upper { upper } else { b }) + 1;
 		let mut subset: Vec<u16> = Vec::new();
 
-		for port in a..b_max
+		b_max = if b_max > 65536 { 65536 } else { b_max };
+		for port in a_max..b_max
 		{
-			subset.push(port);
+			subset.push(u16::try_from(port).unwrap());
 		}
 		return subset;
 	}
@@ -104,6 +121,7 @@ impl ScanMode
 		let set_n: u16 = ScanMode::subset_len(self);
 		let slice: &[u16];
 		let a: u16;
+		let intermidate: usize;
 		let b: u16;
 
 		assert!(n < set_n);
@@ -115,7 +133,8 @@ impl ScanMode
 			}
 			None => {
 				a = self.lower + u16::from(n * self.partition_size);
-				b = a + self.partition_size - 1;
+				intermidate = usize::from(a) + usize::from(self.partition_size) - 1;
+				b = if intermidate > 65535 { 65535 } else { u16::try_from(intermidate).unwrap() };
 				return ScanMode::limit_to_subset(a, b, self.upper, self.partition_size);
 			}
 		}
@@ -127,20 +146,29 @@ mod test
 {
 	use super::*;
 
-	lazy_static!(
-		static ref FULL: String = "full".to_string();
-		static ref QUICK: String = "quick".to_string();
-		static ref PRIORITY: String = "debug_priority_check".to_string();
-		static ref VEC_10: String = "debug_vec_10_port".to_string();
-		static ref VEC_2: String = "debug_vec_2_port".to_string();
-		static ref VEC_16: String = "debug_vec_16_port".to_string();
-		static ref VEC_17: String = "debug_vec_17_port".to_string();
-		static ref LIM_0_0: String = "debug_limit_0..0_port".to_string();
-		static ref LIM_0_9999: String = "debug_limit_0..9999_port".to_string();
-		static ref LIM_60000_65535: String = "debug_limit_60000..65535_port".to_string();
-		static ref LIM_50000_50015: String = "debug_limit_50000..50015_port".to_string();
-		static ref LIM_50000_50016: String = "debug_limit_50000..50016_port".to_string();
-	);
+	fn cmp_len_mode(mode: &String, b: u16) {
+		let mode = ScanMode::new(mode);
+		let a = mode.unwrap().subset_len();
+		assert_eq!(a, b);
+	}
+
+	fn cmp_vec_mode(mode: &String, i: u16, ex: Vec<u16>) {
+		let modes = ScanMode::new(mode).unwrap();
+		let sub = modes.get_subset(i);
+		assert_eq!(sub, ex);
+	}
+
+	fn range_to_vec(a: usize, b:usize) -> Vec<u16>
+	{
+		let mut res: Vec<u16> = Vec::new();
+
+		for i in a..(b+1)
+		{
+			if i >= 65536 { break; }
+			res.push(u16::try_from(i).unwrap())
+		}
+		return res;
+	}
 
 	#[test]
 	fn normal_access() {
@@ -161,66 +189,132 @@ mod test
 		assert_eq!(res, 1);
 	}
 
-	fn cmp_mode(mode: &String, b: u16) {
-		let mode = ScanMode::new(mode);
-		let a = mode.unwrap().subset_len();
-		assert_eq!(a, b);
-	}
-
 	#[test]
 	fn subset_len_full() {
-		cmp_mode(&FULL, 4096);
+		cmp_len_mode(&FULL, 4096);
 	}
 
 	#[test]
 	fn subset_len_quick() {
-		cmp_mode(&QUICK, 64);
+		cmp_len_mode(&QUICK, 64);
 	}
 
 	#[test]
 	fn subset_len_vec_10() {
-		cmp_mode(&VEC_10, 1);
+		cmp_len_mode(&VEC_10, 1);
 	}
 
 	#[test]
 	fn subset_len_vec_2() {
-		cmp_mode(&VEC_2, 1);
+		cmp_len_mode(&VEC_2, 1);
 	}
 
 	#[test]
 	fn subset_len_vec_16() {
-		cmp_mode(&VEC_16, 1);
+		cmp_len_mode(&VEC_16, 1);
 	}
 
 	#[test]
 	fn subset_len_vec_17() {
-		cmp_mode(&VEC_17, 2);
+		cmp_len_mode(&VEC_17, 2);
 	}
 
 	#[test]
 	fn subset_len_lim_0_0() {
-		cmp_mode(&LIM_0_0, 1);
+		cmp_len_mode(&LIM_0_0, 1);
 	}
 
 	#[test]
 	fn subset_len_lim_0_9999() {
-		cmp_mode(&LIM_0_9999, 625);
+		cmp_len_mode(&LIM_0_9999, 625);
 	}
 
 	#[test]
 	fn subset_len_lim_60000_65535() {
-		cmp_mode(&LIM_60000_65535, 346);
+		cmp_len_mode(&LIM_60000_65535, 346);
 	}
 
 	#[test]
 	fn subset_len_lim_50000_50015() {
-		cmp_mode(&LIM_50000_50015, 1);
+		cmp_len_mode(&LIM_50000_50015, 1);
 	}
 
 	#[test]
 	fn subset_len_lim_50000_50016() {
-		cmp_mode(&LIM_50000_50016, 2);
+		cmp_len_mode(&LIM_50000_50016, 2);
 	}
 
+	#[test]
+	#[should_panic]
+	fn get_subset_vec_10_error() {
+		cmp_vec_mode(&VEC_10, 312, vec![]);
+	}
 
+	#[test]
+	#[should_panic]
+	fn get_subset_fullscan_error() {
+		cmp_vec_mode(&FULL, 65535, vec![]);
+	}
+
+	#[test]
+	fn get_subset_vec17_0() {
+		cmp_vec_mode(&VEC_17, 0, vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515]);
+	}
+
+	#[test]
+	fn get_subset_vec17_1() {
+		cmp_vec_mode(&VEC_17, 1, vec![1616]);
+	}
+
+	#[test]
+	fn get_subset_vec10_0() {
+		cmp_vec_mode(&VEC_10, 0, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+	}
+
+	#[test]
+	fn get_subset_lim_0_0() {
+		cmp_vec_mode(&LIM_0_0, 0, vec![0]);
+	}
+
+	#[test]
+	fn get_subset_lim_0_9999() {
+		let range = range_to_vec(9984, 9999);
+		cmp_vec_mode(&LIM_0_9999, 624, range);
+	}
+
+	#[test]
+	fn get_subset_lim_50000_50016_0() {
+		let range = range_to_vec(50000, 50015);
+		cmp_vec_mode(&LIM_50000_50016, 0, range);
+	}
+
+	#[test]
+	fn get_subset_lim_50000_50016_1() {
+		cmp_vec_mode(&LIM_50000_50016, 1, vec![50016]);
+	}
+
+	#[test]
+	fn get_subset_fullscan_head() {
+		let range = range_to_vec(16, 31);
+		cmp_vec_mode(&FULL, 1, range);
+	}
+
+	#[test]
+	fn get_subset_fullscan_middle() {
+		let mid:u16 = 1653;
+		let range = range_to_vec(usize::from(mid) * 16, usize::from(mid) * 16 + 15);
+		cmp_vec_mode(&FULL, mid, range)
+	}
+
+	#[test]
+	fn get_subset_fullscan_end() {
+		let range = range_to_vec(65520, 65535);
+		cmp_vec_mode(&FULL, 4095, range);
+	}
+
+	#[test]
+	fn get_subset_lim_60000_65535() {
+		let range = range_to_vec(65520, 65535);
+		cmp_vec_mode(&LIM_60000_65535, 345, range)
+	}
 }
