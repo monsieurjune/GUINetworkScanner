@@ -18,11 +18,14 @@ lazy_static!(
 	static ref LIM_50000_50016: String = "debug_limit_50000..50016_port".to_string();
 );
 
+#[derive(Debug, Clone)]
+pub struct HashNotFound;
+
 pub struct ScanMode
 {
-    lower: u16,
-    upper: u16,
-    portlist: Option<Vec<u16>>,
+	lower: u16,
+	upper: u16,
+	portlist: Option<Vec<u16>>,
 	partition_size: u16
 }
 
@@ -46,7 +49,7 @@ fn create_hashmap() -> HashMap<String, (u16, u16, Option<Vec<u16>>)>
 
 impl ScanMode
 {
-    pub fn new(mode: &String) -> Result<ScanMode, ()>
+    pub fn new(mode: &String) -> Result<ScanMode, HashNotFound>
     {
 		lazy_static! {
 			static ref PORTMAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = create_hashmap();
@@ -65,9 +68,7 @@ impl ScanMode
 					}
 				);
 			}
-			None => {
-				return Err(());
-			}
+			None => Err(HashNotFound)
 		}
     }
 	
@@ -135,7 +136,7 @@ impl ScanMode
 		let set_n: u16 = ScanMode::subset_len(self);
 		let slice: &[u16];
 		let a: u16;
-		let intermidate: usize;
+		let tmp: usize;
 		let b: u16;
 
 		assert!(n < set_n);
@@ -147,8 +148,8 @@ impl ScanMode
 			}
 			None => {
 				a = self.lower + u16::from(n * self.partition_size);
-				intermidate = usize::from(a) + usize::from(self.partition_size) - 1;
-				b = if intermidate > 65535 { 65535 } else { u16::try_from(intermidate).unwrap() };
+				tmp = usize::from(a) + usize::from(self.partition_size) - 1;
+				b = if tmp > 65535 { 65535 } else { u16::try_from(tmp).unwrap() };
 				return ScanMode::limit_to_subset(a, b, self.upper, self.partition_size);
 			}
 		}
