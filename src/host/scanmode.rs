@@ -1,22 +1,6 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use lazy_static::lazy_static;
-
-lazy_static!(
-	static ref FULL: String = "full".to_string();
-	static ref QUICK: String = "quick".to_string();
-	static ref PRIORITY: String = "debug_priority_check".to_string();
-	static ref VEC_10: String = "debug_vec_10_port".to_string();
-	static ref VEC_2: String = "debug_vec_2_port".to_string();
-	static ref VEC_16: String = "debug_vec_16_port".to_string();
-	static ref VEC_17: String = "debug_vec_17_port".to_string();
-	static ref LIM_0_0: String = "debug_limit_0..0_port".to_string();
-	static ref LIM_0_9999: String = "debug_limit_0..9999_port".to_string();
-	static ref LIM_60000_65535: String = "debug_limit_60000..65535_port".to_string();
-	static ref LIM_50000_50015: String = "debug_limit_50000..50015_port".to_string();
-	static ref LIM_50000_50016: String = "debug_limit_50000..50016_port".to_string();
-);
 
 #[derive(Debug, Clone)]
 pub struct HashNotFound;
@@ -29,33 +13,11 @@ pub struct ScanMode
 	partition_size: u16
 }
 
-fn create_hashmap() -> HashMap<String, (u16, u16, Option<Vec<u16>>)>
-{
-	return HashMap::from([
-		(FULL.clone(), (0, 65535, None)),
-		(QUICK.clone(), (0, 1023, None)),
-		(PRIORITY.clone(), (0, 100, Some(vec![1]))),
-		(VEC_10.clone(), (0, 0, Some(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))),
-		(VEC_2.clone(), (0, 0, Some(vec![1, 1000]))),
-		(VEC_16.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515]))),
-		(VEC_17.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515, 1616]))),
-		(LIM_0_0.clone(), (0, 0, None)),
-		(LIM_0_9999.clone(), (0, 9999, None)),
-		(LIM_60000_65535.clone(), (60000, 65535, None)),
-		(LIM_50000_50015.clone(), (50000, 50015, None)),
-		(LIM_50000_50016.clone(), (50000, 50016, None)),
-	]);
-}
-
 impl ScanMode
 {
-    pub fn new(mode: &String) -> Result<ScanMode, HashNotFound>
+    pub fn new(mode: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>) -> Result<ScanMode, HashNotFound>
     {
-		lazy_static! {
-			static ref PORTMAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = create_hashmap();
-		}
-
-		match PORTMAP.get(mode)
+		match map.get(mode)
 		{
 			Some(run) => {
 				assert!(run.0 <= run.1);
@@ -160,15 +122,49 @@ impl ScanMode
 mod test
 {
 	use super::*;
+	use lazy_static::lazy_static;
+	use std::collections::HashMap;
+
+	lazy_static! (
+		static ref FULL: String = "full".to_string();
+		static ref QUICK: String = "quick".to_string();
+		static ref PRIORITY: String = "debug_priority_check".to_string();
+		static ref VEC_10: String = "debug_vec_10_port".to_string();
+		static ref VEC_2: String = "debug_vec_2_port".to_string();
+		static ref VEC_16: String = "debug_vec_16_port".to_string();
+		static ref VEC_17: String = "debug_vec_17_port".to_string();
+		static ref LIM_0_0: String = "debug_limit_0..0_port".to_string();
+		static ref LIM_0_9999: String = "debug_limit_0..9999_port".to_string();
+		static ref LIM_60000_65535: String = "debug_limit_60000..65535_port".to_string();
+		static ref LIM_50000_50015: String = "debug_limit_50000..50015_port".to_string();
+		static ref LIM_50000_50016: String = "debug_limit_50000..50016_port".to_string();
+	);
+
+	lazy_static! {
+		static ref DEBUG_MAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = HashMap::from([
+			(FULL.clone(), (0, 65535, None)),
+			(QUICK.clone(), (0, 1023, None)),
+			(PRIORITY.clone(), (0, 100, Some(vec![1]))),
+			(VEC_10.clone(), (0, 0, Some(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))),
+			(VEC_2.clone(), (0, 0, Some(vec![1, 1000]))),
+			(VEC_16.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515]))),
+			(VEC_17.clone(), (0, 0, Some(vec![0, 1, 12, 123, 1234, 12345, 6, 67, 678, 6789, 1010, 1111, 1212, 1313, 1414, 1515, 1616]))),
+			(LIM_0_0.clone(), (0, 0, None)),
+			(LIM_0_9999.clone(), (0, 9999, None)),
+			(LIM_60000_65535.clone(), (60000, 65535, None)),
+			(LIM_50000_50015.clone(), (50000, 50015, None)),
+			(LIM_50000_50016.clone(), (50000, 50016, None)),
+		]);
+	}
 
 	fn cmp_len_mode(mode: &String, b: u16) {
-		let mode = ScanMode::new(mode);
+		let mode = ScanMode::new(mode, &DEBUG_MAP);
 		let a = mode.unwrap().subset_len();
 		assert_eq!(a, b);
 	}
 
 	fn cmp_vec_mode(mode: &String, i: u16, ex: Vec<u16>) {
-		let modes = ScanMode::new(mode).unwrap();
+		let modes = ScanMode::new(mode, &DEBUG_MAP).unwrap();
 		let sub = modes.get_subset(i);
 		assert_eq!(sub, ex);
 	}
@@ -187,19 +183,19 @@ mod test
 
 	#[test]
 	fn normal_access() {
-		let mode = ScanMode::new(&QUICK);
+		let mode = ScanMode::new(&QUICK, &DEBUG_MAP);
 		assert!(mode.is_ok());
 	}
 
 	#[test]
 	fn no_key_access() {
-		let mode = ScanMode::new(&"sddfd".to_string());
+		let mode = ScanMode::new(&"sddfd".to_string(), &DEBUG_MAP);
 		assert!(mode.is_err());
 	}
 
 	#[test]
 	fn priority_check() {
-		let mode = ScanMode::new(&PRIORITY);
+		let mode = ScanMode::new(&PRIORITY, &DEBUG_MAP);
 		let res = mode.unwrap().subset_len();
 		assert_eq!(res, 1);
 	}
