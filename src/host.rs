@@ -83,16 +83,17 @@ impl Host
 		);
     }
 
-	fn thread_build(thread_name: String, subset: Vec<u16>, func: fn(Vec<u16>) -> Vec<u16>) -> Result<JoinHandle<Vec<u16>>, std::io::Error>
+	fn thread_build(&self, thread_name: String, subset: Vec<u16>, func: fn(&IpAddr, Vec<u16>) -> Vec<u16>) -> Result<JoinHandle<Vec<u16>>, std::io::Error>
 	{
 		let builder: Builder = Builder::new().name(thread_name).stack_size(32 * 1024);
+		let ip = self.ip.clone();
 
-		return builder.spawn(move || { return func(subset); });
+		return builder.spawn(move || { return func(&ip, subset); });
 	}
 
-	fn thread_handler_helper(subset_name: String, subset: Vec<u16>, func: fn(Vec<u16>) -> Vec<u16>) -> JoinHandle<Vec<u16>>
+	fn thread_handler_helper(&self, subset_name: String, subset: Vec<u16>, func: fn(&IpAddr, Vec<u16>) -> Vec<u16>) -> JoinHandle<Vec<u16>>
 	{
-		match Host::thread_build(subset_name, subset, func)
+		match Host::thread_build(self, subset_name, subset, func)
 		{
 			Ok(thread_handler) => thread_handler,
 			Err(e) => panic!("Thread Allocation failed {}", e)
@@ -136,7 +137,7 @@ impl Host
 
 		for port in port_result
 		{
-			port_str = port.to_string();
+			port_str = " ,".to_string() + &port.to_string();
 			format += &port_str;
 		}
 		return format;
@@ -155,7 +156,7 @@ impl Host
 		for subset_no in 0..n
 		{
 			subset = self.tcp_mode.1.as_ref().unwrap().get_subset(subset_no);
-			subset_thread = Host::thread_handler_helper(subset_no.to_string(), subset, dump);
+			subset_thread = Host::thread_handler_helper(self, subset_no.to_string(), subset, tcp_utils::scan);
 			thread_handler_list.push(subset_thread);
 		}
 		thread_result = Host::thread_joiner(thread_handler_list);
