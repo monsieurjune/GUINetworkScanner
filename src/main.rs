@@ -3,7 +3,7 @@ mod host;
 fn main()
 {
     let ip = String::from("127.0.0.1");
-    let h1 = host::Host::new(&String::from("full"), &ip);
+    let h1 = host::Host::new(&ip, &"full".to_string(), true, &"".to_string(), false);
 
     match h1 {
         Ok(h11) => {

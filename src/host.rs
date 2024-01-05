@@ -1,5 +1,10 @@
+mod tcp_utils;
+mod udp_utils;
 mod scanmode;
 mod scan;
+
+
+// use json::{JsonResult, Error};
 use scanmode::{
 	ScanMode,
 	HashNotFound
@@ -15,11 +20,14 @@ use std::thread::{
 };
 use std::str::FromStr;
 use std::any::Any;
+use std::collections::HashMap;
+use lazy_static::lazy_static;
 
 pub struct Host
 {
-    ipv4: IpAddr,
-    scan_mode: ScanMode
+    ip: IpAddr,
+    tcp_mode: (bool, Option<ScanMode>),
+	udp_mode: (bool, Option<ScanMode>)
 }
 
 #[derive(Debug, Clone)]
@@ -36,17 +44,43 @@ fn dump(a: Vec<u16>) -> Vec<u16>
 
 impl Host
 {
-    pub fn new(mode: &String, ipv4_str: &String) -> Result<Host, HostError>
-    {
-		match ScanMode::new(mode) {
-			Ok(data) => {
-				match IpAddr::from_str(ipv4_str) {
-					Ok(ip) => Ok(Host{ipv4: ip, scan_mode: data }),
-					Err(e2) => Err(HostError::AddrParseError(e2))
-				}
+	fn choice_to_scanmode(choice: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>, scan: bool) -> Result<(bool, Option<ScanMode>), HostError>
+	{
+		if scan {
+			match ScanMode::new(choice, map) {
+				Ok(res) => Ok((true, Some(res))),
+				Err(e) => Err(HostError::HashNotFound(e))
 			}
-			Err(e1) => Err(HostError::HashNotFound(e1))
 		}
+		else {
+			Ok((false, None))
+		}
+	}
+
+    pub fn new(ip_str: &String, tcp_choice: &String, tcp_scan: bool, udp_choice: &String, udp_scan: bool) -> Result<Host, HostError>
+    {
+		let tcp_result: (bool, Option<ScanMode>);
+		let udp_result: (bool, Option<ScanMode>);
+		let ip_res: IpAddr;
+
+		lazy_static! {
+			static ref TCP_MAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = tcp_utils::create_map();
+			static ref UDP_MAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = udp_utils::create_map();
+		}
+
+		ip_res = match IpAddr::from_str(ip_str) {
+			Ok(ip) => Ok(ip),
+			Err(e) => Err(HostError::AddrParseError(e))
+		}?;
+		tcp_result = Host::choice_to_scanmode(tcp_choice, &TCP_MAP, tcp_scan)?;
+		udp_result = Host::choice_to_scanmode(udp_choice, &UDP_MAP, udp_scan)?;
+		return Ok(
+			Host {
+				ip: ip_res,
+				tcp_mode: tcp_result,
+				udp_mode: udp_result
+			}
+		);
     }
 
 	fn thread_build(thread_name: String, subset: Vec<u16>, func: fn(Vec<u16>) -> Vec<u16>) -> Result<JoinHandle<Vec<u16>>, std::io::Error>
@@ -110,7 +144,7 @@ impl Host
 
 	pub fn tcp_scan(&self) -> String
 	{
-		let n: u16 = self.scan_mode.subset_len();
+		let n: u16 = self.tcp_mode.1.as_ref().unwrap().subset_len();
 		let port_result: Vec<u16>;
 		let thread_result: Vec<Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>>;
 		let log: String;
@@ -120,7 +154,7 @@ impl Host
 
 		for subset_no in 0..n
 		{
-			subset = self.scan_mode.get_subset(subset_no);
+			subset = self.tcp_mode.1.as_ref().unwrap().get_subset(subset_no);
 			subset_thread = Host::thread_handler_helper(subset_no.to_string(), subset, dump);
 			thread_handler_list.push(subset_thread);
 		}
