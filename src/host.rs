@@ -1,5 +1,5 @@
-mod tcp_utils;
-mod udp_utils;
+mod map;
+mod tcp_connect;
 mod scanmode;
 mod thread_utils;
 
@@ -14,9 +14,9 @@ use std::net::{
 	AddrParseError
 };
 use std::str::FromStr;
-use std::collections::HashMap;
 use lazy_static::lazy_static;
 
+use self::map::Map;
 use self::thread_utils::JoinHd;
 
 type Mode = Option<ScanMode>;
@@ -37,7 +37,7 @@ pub enum HostError
 
 impl Host
 {
-	fn choice_to_scanmode(choice: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>, scan: bool) -> Result<Mode, HostError>
+	fn choice_to_scanmode(choice: &String, map: &Map, scan: bool) -> Result<Mode, HostError>
 	{
 		if scan {
 			match ScanMode::new(choice, map) {
@@ -57,8 +57,8 @@ impl Host
 		let ip_res: IpAddr;
 
 		lazy_static! {
-			static ref TCP_MAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = tcp_utils::create_map();
-			static ref UDP_MAP: HashMap<String, (u16, u16, Option<Vec<u16>>)> = udp_utils::create_map();
+			static ref TCP_MAP: Map = map::tcp_map_create();
+			static ref UDP_MAP: Map = map::udp_map_create();
 		}
 
 		ip_res = match IpAddr::from_str(ip_str) {
@@ -107,7 +107,7 @@ impl Host
 		return thread_utils::thread_joiner(thread_handler_list);
 	}
 
-	pub fn tcp_scan(&self) -> String
+	pub fn tcp_connect_scan(&self) -> String
 	{
 		let ports_list: Vec<u16>;
 		
@@ -115,7 +115,7 @@ impl Host
 			return String::from("");
 		}
 
-		ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_utils::scan);
+		ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_connect::scan);
 		return Host::portlist_to_json(ports_list);
 	}
 }

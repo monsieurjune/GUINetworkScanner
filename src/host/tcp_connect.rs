@@ -1,17 +1,7 @@
-use std::vec::Vec;
-use std::collections::HashMap;
 use std::net::{
 	IpAddr,
 	TcpStream
 };
-
-pub fn create_map() -> HashMap<String, (u16, u16, Option<Vec<u16>>)>
-{
-	HashMap::from([
-		("full".to_string(), (0, 65535, None)),
-		("full".to_string(), (0, 65535, None)),
-	])
-}
 
 pub fn scan(ip: &IpAddr, subset: Vec<u16>) -> Vec<u16>
 {

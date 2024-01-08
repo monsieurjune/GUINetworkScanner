@@ -1,5 +1,6 @@
 mod host;
 
+
 fn main()
 {
     let ip = String::from("127.0.0.1");
@@ -8,7 +9,7 @@ fn main()
     match h1 {
         Ok(h11) => {
 			println!("Here we go");
-            let str = h11.tcp_scan();
+            let str = h11.tcp_connect_scan();
 			println!("Result : {}", str);
         }
         Err(_) => {}
