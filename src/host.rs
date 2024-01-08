@@ -1,8 +1,7 @@
 mod tcp_utils;
 mod udp_utils;
 mod scanmode;
-mod scan;
-
+mod thread_utils;
 
 // use json::{JsonResult, Error};
 use scanmode::{
@@ -14,20 +13,19 @@ use std::net::{
 	IpAddr,
 	AddrParseError
 };
-use std::thread::{
-	Builder,
-	JoinHandle
-};
 use std::str::FromStr;
-use std::any::Any;
 use std::collections::HashMap;
 use lazy_static::lazy_static;
+
+use self::thread_utils::JoinHd;
+
+type Mode = Option<ScanMode>;
 
 pub struct Host
 {
     ip: IpAddr,
-    tcp_mode: (bool, Option<ScanMode>),
-	udp_mode: (bool, Option<ScanMode>)
+    tcp_mode: Mode,
+	udp_mode: Mode
 }
 
 #[derive(Debug, Clone)]
@@ -37,30 +35,25 @@ pub enum HostError
 	HashNotFound(HashNotFound)
 }
 
-fn dump(a: Vec<u16>) -> Vec<u16>
-{
-	vec![0]
-}
-
 impl Host
 {
-	fn choice_to_scanmode(choice: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>, scan: bool) -> Result<(bool, Option<ScanMode>), HostError>
+	fn choice_to_scanmode(choice: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>, scan: bool) -> Result<Mode, HostError>
 	{
 		if scan {
 			match ScanMode::new(choice, map) {
-				Ok(res) => Ok((true, Some(res))),
+				Ok(res) => Ok(Some(res)),
 				Err(e) => Err(HostError::HashNotFound(e))
 			}
 		}
 		else {
-			Ok((false, None))
+			Ok(None)
 		}
 	}
 
     pub fn new(ip_str: &String, tcp_choice: &String, tcp_scan: bool, udp_choice: &String, udp_scan: bool) -> Result<Host, HostError>
     {
-		let tcp_result: (bool, Option<ScanMode>);
-		let udp_result: (bool, Option<ScanMode>);
+		let tcp_result: Mode;
+		let udp_result: Mode;
 		let ip_res: IpAddr;
 
 		lazy_static! {
@@ -83,53 +76,6 @@ impl Host
 		);
     }
 
-	fn thread_build(&self, thread_name: String, subset: Vec<u16>, func: fn(&IpAddr, Vec<u16>) -> Vec<u16>) -> Result<JoinHandle<Vec<u16>>, std::io::Error>
-	{
-		let builder: Builder = Builder::new().name(thread_name).stack_size(32 * 1024);
-		let ip = self.ip.clone();
-
-		return builder.spawn(move || { return func(&ip, subset); });
-	}
-
-	fn thread_handler_helper(&self, subset_name: String, subset: Vec<u16>, func: fn(&IpAddr, Vec<u16>) -> Vec<u16>) -> JoinHandle<Vec<u16>>
-	{
-		match Host::thread_build(self, subset_name, subset, func)
-		{
-			Ok(thread_handler) => thread_handler,
-			Err(e) => panic!("Thread Allocation failed {}", e)
-		}
-	}
-
-	fn thread_joiner(thead_handler_list: Vec<JoinHandle<Vec<u16>>>) -> Vec<Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>>
-	{
-		let mut result: Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>;
-		let mut handler_result: Vec<Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>> = Vec::new();
-
-		for handler in thead_handler_list
-		{
-			result = handler.join();
-			handler_result.push(result);
-		}
-		return handler_result;
-	}
-
-	fn get_thread_result(thread_result: Vec<Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>>) -> Vec<u16>
-	{
-		let mut port_result: Vec<u16> = Vec::new();
-
-		for result in thread_result
-		{
-			match result
-			{
-				Ok(ports) => {
-					port_result.extend(ports);
-				}
-				Err(_) => {}
-			}
-		}
-		return port_result;
-	}
-
 	fn portlist_to_json(port_result: Vec<u16>) -> String
 	{
 		let mut format: String = String::from("");
@@ -143,25 +89,33 @@ impl Host
 		return format;
 	}
 
-	pub fn tcp_scan(&self) -> String
+	fn scanner_helper(&self, obj_mode: &Option<ScanMode>, func: thread_utils::ScanFunc) -> Vec<u16>
 	{
-		let n: u16 = self.tcp_mode.1.as_ref().unwrap().subset_len();
-		let port_result: Vec<u16>;
-		let thread_result: Vec<Result<Vec<u16>, Box<(dyn Any + Send + 'static)>>>;
-		let log: String;
+		let ip = self.ip.clone();
+		let mode: &ScanMode = &obj_mode.as_ref().unwrap();
+		let n: u16 = mode.subset_len();
 		let mut subset: Vec<u16>;
-		let mut subset_thread: JoinHandle<Vec<u16>>;
-		let mut thread_handler_list: Vec<JoinHandle<Vec<u16>>> = Vec::new();
+		let mut subset_thread: JoinHd;
+		let mut thread_handler_list: Vec<JoinHd> = Vec::new();
 
 		for subset_no in 0..n
 		{
-			subset = self.tcp_mode.1.as_ref().unwrap().get_subset(subset_no);
-			subset_thread = Host::thread_handler_helper(self, subset_no.to_string(), subset, tcp_utils::scan);
+			subset = mode.get_subset(subset_no);
+			subset_thread = thread_utils::thread_builder(ip, subset, subset_no.to_string(), func);
 			thread_handler_list.push(subset_thread);
 		}
-		thread_result = Host::thread_joiner(thread_handler_list);
-		port_result = Host::get_thread_result(thread_result);
-		log = Host::portlist_to_json(port_result);
-		return log;
+		return thread_utils::thread_joiner(thread_handler_list);
+	}
+
+	pub fn tcp_scan(&self) -> String
+	{
+		let ports_list: Vec<u16>;
+		
+		if self.tcp_mode.is_none() {
+			return String::from("");
+		}
+
+		ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_utils::scan);
+		return Host::portlist_to_json(ports_list);
 	}
 }

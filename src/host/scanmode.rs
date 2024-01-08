@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 
 #[derive(Debug, Clone)]
 pub struct HashNotFound;
-
+pub type Map = HashMap<String, (u16, u16, Option<Vec<u16>>)>;
 pub struct ScanMode
 {
 	lower: u16,
@@ -15,7 +15,7 @@ pub struct ScanMode
 
 impl ScanMode
 {
-    pub fn new(mode: &String, map: &HashMap<String, (u16, u16, Option<Vec<u16>>)>) -> Result<ScanMode, HashNotFound>
+    pub fn new(mode: &String, map: &Map) -> Result<ScanMode, HashNotFound>
     {
 		match map.get(mode)
 		{
