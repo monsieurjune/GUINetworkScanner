@@ -39,6 +39,9 @@ impl Host
 {
 	fn choice_to_scanmode(choice: &String, map: &Map, scan: bool) -> Result<Mode, HostError>
 	{
+		if choice == &"No" {
+			return Ok(None);
+		}
 		if scan {
 			match ScanMode::new(choice, map) {
 				Ok(res) => Ok(Some(res)),
@@ -50,7 +53,7 @@ impl Host
 		}
 	}
 
-    pub fn new(ip_str: &String, tcp_choice: &String, tcp_scan: bool, udp_choice: &String, udp_scan: bool) -> Result<Host, HostError>
+    pub fn new(ip_str: &String, tcp_choice: &String, udp_choice: &String) -> Result<Host, HostError>
     {
 		let tcp_result: Mode;
 		let udp_result: Mode;
@@ -65,8 +68,8 @@ impl Host
 			Ok(ip) => Ok(ip),
 			Err(e) => Err(HostError::AddrParseError(e))
 		}?;
-		tcp_result = Host::choice_to_scanmode(tcp_choice, &TCP_MAP, tcp_scan)?;
-		udp_result = Host::choice_to_scanmode(udp_choice, &UDP_MAP, udp_scan)?;
+		tcp_result = Host::choice_to_scanmode(tcp_choice, &TCP_MAP, tcp_choice != &"No")?;
+		udp_result = Host::choice_to_scanmode(udp_choice, &UDP_MAP, udp_choice != &"No")?;
 		return Ok(
 			Host {
 				ip: ip_res,
@@ -76,15 +79,19 @@ impl Host
 		);
     }
 
+	pub fn get_ipaddr(&self) -> IpAddr
+	{
+		self.ip
+	}
+
 	fn portlist_to_json(port_result: Vec<u16>) -> String
 	{
 		let mut format: String = String::from("");
-		let mut port_str: String;
 
 		for port in port_result
 		{
-			port_str = " ,".to_string() + &port.to_string();
-			format += &port_str;
+			format += &port.to_string();
+			format += " ";
 		}
 		return format;
 	}
@@ -114,7 +121,6 @@ impl Host
 		if self.tcp_mode.is_none() {
 			return String::from("");
 		}
-
 		ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_connect::scan);
 		return Host::portlist_to_json(ports_list);
 	}
