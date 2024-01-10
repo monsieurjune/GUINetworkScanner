@@ -122,4 +122,15 @@ impl Host
 		ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_connect::scan);
 		return Host::portlist_to_json(ports_list);
 	}
+
+	pub fn udp_connect_scan(&self) -> String
+	{
+		let ports_list: Vec<u16>;
+
+		if self.udp_mode.is_none() {
+			return String::from("");
+		}
+		ports_list = Host::scanner_helper(self, &self.udp_mode, udp_connect::scan);
+		return Host::portlist_to_json(ports_list);
+	}
 }

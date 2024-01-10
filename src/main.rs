@@ -53,9 +53,14 @@ fn main() -> std::io::Result<()>
 		}
 	}
 	println!("------------------------------------------");
-	for a_host in host_list
+	for a_host in &host_list
 	{
 		println!("{} : {}", a_host.get_ipaddr(), a_host.tcp_connect_scan());
+	}
+	println!("------------------------------------------");
+	for a_host in &host_list
+	{
+		println!("{} : {}", a_host.get_ipaddr(), a_host.udp_connect_scan());
 	}
 	Ok(())
 }
