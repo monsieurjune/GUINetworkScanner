@@ -1,21 +1,19 @@
 mod map;
 mod tcp_connect;
+mod udp_connect;
 mod scanmode;
 mod thread_utils;
 
-// use json::{JsonResult, Error};
 use scanmode::{
 	ScanMode,
 	HashNotFound
 };
-
 use std::net::{
 	IpAddr,
 	AddrParseError
 };
 use std::str::FromStr;
 use lazy_static::lazy_static;
-
 use self::map::Map;
 use self::thread_utils::JoinHd;
 

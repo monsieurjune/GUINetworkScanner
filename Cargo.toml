@@ -14,3 +14,4 @@ opt-level = 1
 [dependencies]
 lazy_static = "1.4.0"
 json = "0.12"
+icmp-socket = "0.2.0"
