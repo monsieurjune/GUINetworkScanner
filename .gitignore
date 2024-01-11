@@ -16,3 +16,6 @@ target/
 # Vscode Garbage
 .vscode/
 **/.vscode/
+
+# Image
+*.png
