@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram id="m_vLdgncoBJ_zt2SW3_1" name="Page-1">
+        <mxGraphModel dx="2459" dy="1129" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Host" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=default;fontFamily=Helvetica;fontSize=14;fontColor=default;fillColor=none;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="401" width="580" height="338" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="- ipv4 : std::net::IpAddr" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="26" width="580" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="- tcp_mode : Mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="52" width="580" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="- udp_mode : Mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="78" width="580" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="104" width="580" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="+ new(ip_str: &amp;amp;String, tcp_choice: &amp;amp;String, udp_choice: &amp;amp;String) : Result&amp;lt;Host, HostError&amp;gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="112" width="580" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="+ get_ipaddr() : IpAddr" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="142" width="580" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="+ tcp_connect_scan() : String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="174" width="580" height="34" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="+ udp_connect_scan() : String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="208" width="580" height="34" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="- portlist_to_json(portlist_result: Vec&amp;lt;u16&amp;gt;) : String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="242" width="580" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="- choice_to_scanmode(choice: &amp;amp;String, map: &amp;amp;Map, scan: bool) : Result&amp;lt;Mode, HostError&amp;gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="274" width="580" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="- scanner_helper(obj_mode: &amp;amp;Option&amp;lt;Mode&amp;gt;, func: ScanFunc) : Vec&amp;lt;u16&amp;gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Helvetica;fontSize=14;fontColor=default;startSize=26;html=1;" vertex="1" parent="2">
+                    <mxGeometry y="306" width="580" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=diamondThin;endFill=1;endSize=16;fontSize=14;" edge="1" parent="1" source="15" target="3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="ScanMode" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=14;" vertex="1" parent="1">
+                    <mxGeometry x="900" y="280" width="510" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="- lowerRange : u16" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="26" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="- upperRange : u16" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="52" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="- portList : Option&lt;Vec&lt;u16&gt;&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="78" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="- partition_size: usize" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="104" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="130" width="510" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="+ new(mode: &amp;String, map: &amp;Map) : Result&lt;ScanMode, HashNotFound&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="138" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="+ get_limit() : (u16, u16)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="164" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="+ get_portlist() : Option&lt;Vec&lt;u16&gt;&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="190" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="+ get_subset(subset_no: usize) : Vec&lt;u16&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="216" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="+ subset_len() : usize" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="242" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="- portlist_slicer(list: &amp;[u16], size: u16) : Vec&lt;u16&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="268" width="510" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="- limit_to_subset(a: u16, b: u16, upper: u16, size: u16) : Vec&lt;u16&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=14;" vertex="1" parent="15">
+                    <mxGeometry y="294" width="510" height="26" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

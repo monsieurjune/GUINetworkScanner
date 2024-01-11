@@ -21,16 +21,18 @@ fn timestamp_check(start: &SystemTime, offset_ms: u64) -> bool
 
 	match start.elapsed()
 	{
-		Ok(diff) => diff >= t_stop,
+		Ok(diff) => diff < t_stop,
 		Err(_) => panic!("TIME ERROR -> ABORT!!!")
 	}
 }
 
-fn icmp_is_port_close(ip_a: &IpAddr, pkg_b: Icmpv4Packet, ptr_sock_b: Option<SocketAddrV4>) -> bool
+fn icmp_is_port_close(ip_a: &IpAddr, pkg_b: Icmpv4Packet, ptr_sock_b: Option<SocketAddrV4>, port_no: u16) -> bool
 {
+	// println!("WTF1");
 	match ptr_sock_b {
 		Some(sock_b) => {
-			if ip_a != &IpAddr::V4(sock_b.ip().clone()) {
+			println!("port {}", sock_b.port());
+			if ip_a != &IpAddr::V4(sock_b.ip().clone()) || port_no != sock_b.port() {
 				return false;
 			}
 			return pkg_b.typ == 3 && pkg_b.code == 3;
@@ -39,7 +41,7 @@ fn icmp_is_port_close(ip_a: &IpAddr, pkg_b: Icmpv4Packet, ptr_sock_b: Option<Soc
 	}
 }
 
-fn wait_for_icmp(ip: &IpAddr) -> bool
+fn wait_for_icmp(ip: &IpAddr, port_no: u16) -> bool
 {
 	let mut icmp_socket: socket::IcmpSocket4;
 
@@ -50,13 +52,17 @@ fn wait_for_icmp(ip: &IpAddr) -> bool
 	if icmp_socket.bind([127, 0, 0, 1]).is_err() {
 		return false;
 	}
+	println!("test reciever");
 	match icmp_socket.rcv_from() {
 		Ok(icmp_info) => {
-			if icmp_is_port_close(ip, icmp_info.0, icmp_info.1.as_socket_ipv4()) {
+			// println!("test reciever");
+			if icmp_is_port_close(ip, icmp_info.0, icmp_info.1.as_socket_ipv4(), port_no) {
+				println!("Here");
 				return true;
 			}
 		}
 		Err(_) => {
+			// println!("test reciever");
 			return false;
 		}
 	}
@@ -94,7 +100,9 @@ fn udp_connect(ip: &IpAddr, port_no: u16, socket_ref: &UdpSocket) -> bool
 	}
 	while timestamp_check(&now, 50)
 	{
-		if wait_for_icmp(ip) {
+		// println!("test thread");
+		if wait_for_icmp(ip, port_no) {
+			println!("Gotcha");
 			return true;
 		}
 	}
@@ -106,11 +114,13 @@ pub fn scan(ip: &IpAddr, subset: Vec<u16>) -> Vec<u16>
 	let udp_socket: UdpSocket;
 	let mut port_res: Vec<u16> = Vec::new();
 
+	println!("test thread");
 	match udpsocket_dynamic_binder() {
 		Ok(sock) => { udp_socket = sock; }
 		Err(_) => { return Vec::new(); }
 	}
 
+	println!("test thread");
 	for port in subset
 	{
 		if !udp_connect(ip, port, &udp_socket) {
