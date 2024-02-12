@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Network Scanner Tools with Rust</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <h1>Network Scanner Tools with Rust</h1>
+    <div class="container">
+      <div class="input-section">
+        <h3>Enter IP Address...</h3>
+        <input type="text" placeholder="E.g., 127.0.0.1" />
+        <!-- <h4>Settings</h4>
+        <h5>Options</h5>
+        <input type="checkbox" class="scan-option" />TCP Scan
+        <input type="checkbox" class="scan-option"/>UDP Scan
+        <h5>Mode</h5>
+        <input type="radio" class="scan-mode"/>Fast Scan
+        <input type="radio" class="scan-mode"/>Full Scan
+        <div class="separator"></div>
+        <button class="location-button">Scan Local Network</button> -->
+        <table>
+          <tr>
+            <th>#</th>
+            <th>IP Address</th>
+            <th>Device Name</th>
+            <th>MAC Address</th>
+          </tr>
+          <tr>
+            <td>1.</td>
+            <td>127.0.0.1</td>
+            <td>Test</td>
+            <td>xx.xx.xx.xx</td>
+          </tr>
+          <tr>
+            <td>2.</td>
+            <td>192.168.1.1</td>
+            <td>Computer</td>
+            <td>xx:xx:xx:xx</td>
+          </tr>
+          <tr>
+            <td>3.</td>
+            <td>123.456.789</td>
+            <td>Notebook</td>
+            <td>xx:xx:xx:xx</td>
+          </tr>
+        </table>
+        <button class="search-button">Scan</button>
+      </div>
+      <div class="weather-data">
+        <!-- <div class="current-weather">
+          <div class="details">
+            <h2>%Vulnerabilities</h2>
+            <h6>Temperature: __°C</h6>
+            <h6>Wind: __ M/S</h6>
+            <h6>Humidity: __%</h6>
+          </div>
+        </div> -->
+        <div class="days-forecast">
+          <h2>Scan Results</h2>
+          <table>
+            <tr>
+              <th>#</th>
+              <th>Port</th>
+              <th>Service</th>
+              <th>Type</th>
+              <th>Groups</th>
+            </tr>
+            <tr>
+              <td>1.</td>
+              <td>135</td>
+              <td>MSRCP</td>
+              <td>TCP</td>
+              <td>Web - Scans</td>
+            </tr>
+            <tr>
+              <td>2.</td>
+              <td>445</td>
+              <td>Microsoft-DS</td>
+              <td>TCP</td>
+              <td>Web - Scans</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
