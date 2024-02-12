@@ -5,6 +5,14 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.74"
 
+[[bin]]
+name = "lister"
+path = "src/lister/main.rs"
+
+[[bin]]
+name = "port_scanner"
+path = "src/port/main.rs"
+
 [profile.dev]
 opt-level = 0
 
@@ -16,3 +24,5 @@ lazy_static = "1.4.0"
 json = "0.12"
 icmp-socket = "0.2.0"
 socket2 = "0.5.5"
+network-interface = "1.1.1"
+local-ip-address = "0.5.7"
