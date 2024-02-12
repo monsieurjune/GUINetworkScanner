@@ -40,7 +40,6 @@ h1 {
   border-radius: 4px;
   border: 1px solid #ccc;
   transition: 0.2s ease;
-  
 }
 
 .input-section input:focus {
@@ -116,7 +115,8 @@ table {
   margin-bottom: 25px;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #dddddd;
   padding: 10px;
   text-align: left;
@@ -150,6 +150,14 @@ td[state="Open"] {
 
 td[state="Closed"] {
   color: red;
+}
+
+td[input="checkbox"] {
+  text-align: center;
+  width: 10%;
+  height: 10%;
+  margin: 0;
+  padding: 0;
 }
 
 .weather-data {
