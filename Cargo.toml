@@ -17,11 +17,15 @@ path = "src/probe/main.rs"
 name = "port_scanner"
 path = "src/port/main.rs"
 
+[[bin]]
+name = "ip_checker"
+path = "src/ipcheck/main.rs"
+
 [profile.dev]
 opt-level = 0
 
 [profile.release]
-opt-level = 1
+opt-level = 0
 
 [dependencies]
 lazy_static = "1.4.0"
