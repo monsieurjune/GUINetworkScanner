@@ -7,7 +7,34 @@ use network_interface::{
     Addr::{V4, V6},
     NetworkInterface, NetworkInterfaceConfig, V4IfAddr, V6IfAddr,
 };
+
 extern crate json;
+
+fn remove_none_broadcast(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+
+    for interface in interface_info {
+        for addr in &interface.addr {
+            match addr {
+                V4(v4) => match v4.broadcast {
+                    Some(broadcast) => {
+                        cleaned_info.push(interface.clone());
+                    }
+                    None => {}
+                },
+
+                V6(v6) => match v6.broadcast {
+                    Some(broadcast) => {
+                        cleaned_info.push(interface.clone());
+                    }
+                    None => {}
+                },
+            }
+        }
+    }
+
+    return cleaned_info;
+}
 
 fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
@@ -58,6 +85,7 @@ fn main() {
             println!("{:?}", v4);
             println!("{:?}", v4.netmask.unwrap());
         }
+
         V6(v6) => {
             println!("{:?}", v6);
         }
