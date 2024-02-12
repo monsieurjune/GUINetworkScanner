@@ -1,11 +1,12 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
-
-use local_ip_address::{list_afinet_netifas, local_ip};
 use network_interface::{
-    Addr::{V4, V6},
-    NetworkInterface, NetworkInterfaceConfig, V4IfAddr, V6IfAddr,
+    Addr::{
+        V4,
+        V6
+    },
+    NetworkInterface,
+    NetworkInterfaceConfig,
+    V4IfAddr,
+    V6IfAddr
 };
 
 extern crate json;
