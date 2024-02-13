@@ -11,66 +11,54 @@ use network_interface::{
 mod parser;
 extern crate json;
 
-// fn remove_none_broadcast(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+    let mut cleaned_info1: Vec<NetworkInterface> = Vec::new();
+    let mut cleaned_info2: Vec<NetworkInterface> = Vec::new();
 
-//     for interface in interface_info {
-//         for addr in &interface.addr {
-//             match addr {
-//                 V4(v4) => match v4.broadcast {
-//                     Some(broadcast) => {
-//                         cleaned_info.push(interface.clone());
-//                     }
-//                     None => {}
-//                 },
+    for interface in interface_info {
+        match interface.name.contains("Bluetooth") || interface.name.contains("Loopback") {
+            true => {}
+            false => {
+                cleaned_info1.push(interface.clone());
+            }
+        }
+    }
 
-//                 V6(v6) => match v6.broadcast {
-//                     Some(broadcast) => {
-//                         cleaned_info.push(interface.clone());
-//                     }
-//                     None => {}
-//                 },
-//             }
-//         }
-//     }
+    for interface in cleaned_info1 {
+        match interface.addr[0] {
+            V4(v4) => match v4.broadcast {
+                Some(_) => {
+                    cleaned_info2.push(interface.clone());
+                }
+                None => {}
+            },
+            V6(_) => {}
+        }
+    }
 
-//     return cleaned_info;
-// }
+    cleaned_info2
+}
 
-// fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+// fn get_wlan(info: Vec<NetworkInterface>) -> NetworkInterface
+fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
-//     for interface in interface_info {
-//         match interface.name.contains("Bluetooth") || interface.name.contains("Loopback") {
-//             true => {}
-//             false => {
-//                 cleaned_info.push(interface.clone());
-//             }
-//         }
-//     }
+    for interface in interface_info {
+        match interface.name.find("lo") {
+            Some(pos) => {
+                if pos != 0 {
+                    cleaned_info.push(interface.clone());
+                }
+            }
 
-//     return cleaned_info;
-// }
+            None => {
+                cleaned_info.push(interface.clone());
+            }
+        }
+    }
 
-// // fn get_wlan(info: Vec<NetworkInterface>) -> NetworkInterface
-// fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
-
-//     for interface in interface_info {
-//         match interface.name.find("lo") {
-//             Some(pos) => {
-//                 if pos != 0 {
-//                     cleaned_info.push(interface.clone());
-//                 }
-//             }
-
-//             None => {
-//                 cleaned_info.push(interface.clone());
-//             }
-//         }
-//     }
-//     return cleaned_info;
-// }
+    cleaned_info
+}
 
 fn main() {
     let mut info = NetworkInterface::show().unwrap();
