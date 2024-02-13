@@ -21,8 +21,18 @@ pub fn remove_disconnect(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkI
 {
     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
-    for interface in interface_info {
-        
+    for interface in cleaned_info {
+        match interface.addr[0]
+        {
+            V4(v4) => match v4.broadcast {
+                Some(_) => {
+                    cleaned_info.push(interface.clone());
+                }
+                None => {}
+            },
+            V6(_) => {}
+        }
     }
+
     return cleaned_info;
 }
