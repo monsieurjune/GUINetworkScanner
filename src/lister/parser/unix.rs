@@ -4,9 +4,6 @@ use network_interface::{
         V6
     },
     NetworkInterface,
-    NetworkInterfaceConfig,
-    V4IfAddr,
-    V6IfAddr
 };
 use std::vec::Vec;
 
@@ -35,7 +32,12 @@ pub fn remove_disconnect(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkI
 
     for interface in interface_info {
         if interface.addr.len() >= 1 {
-            cleaned_info.push(interface.clone());
+            match interface.addr[0] {
+                V4(_) => {
+                    cleaned_info.push(interface.clone());
+                }
+                _ => {}
+            }
         }
     }
     return cleaned_info;
