@@ -9,11 +9,14 @@ use network_interface::{
     V6IfAddr
 };
 mod parser;
+mod lexer;
 extern crate json;
 
-fn main() {
-    let mut info = NetworkInterface::show().unwrap();
+fn main() -> Result<(), network_interface::Error>
+{
+    let mut info = NetworkInterface::show()?;
 
     info = parser::parser(&info);
     println!("{:?}", info);
+    Ok(())
 }

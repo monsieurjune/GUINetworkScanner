@@ -1,13 +1,4 @@
-use network_interface::{
-    Addr::{
-        V4,
-        V6
-    },
-    NetworkInterface,
-    NetworkInterfaceConfig,
-    V4IfAddr,
-    V6IfAddr
-};
+use network_interface::NetworkInterface;
 use std::vec::Vec;
 mod unix;
 mod window;
