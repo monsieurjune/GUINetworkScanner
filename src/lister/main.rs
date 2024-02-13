@@ -8,89 +8,73 @@ use network_interface::{
     V4IfAddr,
     V6IfAddr
 };
-
+mod parser;
 extern crate json;
 
-fn remove_none_broadcast(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+// fn remove_none_broadcast(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
-    for interface in interface_info {
-        for addr in &interface.addr {
-            match addr {
-                V4(v4) => match v4.broadcast {
-                    Some(broadcast) => {
-                        cleaned_info.push(interface.clone());
-                    }
-                    None => {}
-                },
+//     for interface in interface_info {
+//         for addr in &interface.addr {
+//             match addr {
+//                 V4(v4) => match v4.broadcast {
+//                     Some(broadcast) => {
+//                         cleaned_info.push(interface.clone());
+//                     }
+//                     None => {}
+//                 },
 
-                V6(v6) => match v6.broadcast {
-                    Some(broadcast) => {
-                        cleaned_info.push(interface.clone());
-                    }
-                    None => {}
-                },
-            }
-        }
-    }
+//                 V6(v6) => match v6.broadcast {
+//                     Some(broadcast) => {
+//                         cleaned_info.push(interface.clone());
+//                     }
+//                     None => {}
+//                 },
+//             }
+//         }
+//     }
 
-    return cleaned_info;
-}
+//     return cleaned_info;
+// }
 
-fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+// fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
-    for interface in interface_info {
-        match interface.name.contains("Bluetooth") || interface.name.contains("Loopback") {
-            true => {}
-            false => {
-                cleaned_info.push(interface.clone());
-            }
-        }
-    }
+//     for interface in interface_info {
+//         match interface.name.contains("Bluetooth") || interface.name.contains("Loopback") {
+//             true => {}
+//             false => {
+//                 cleaned_info.push(interface.clone());
+//             }
+//         }
+//     }
 
-    return cleaned_info;
-}
+//     return cleaned_info;
+// }
 
-// fn get_wlan(info: Vec<NetworkInterface>) -> NetworkInterface
-fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+// // fn get_wlan(info: Vec<NetworkInterface>) -> NetworkInterface
+// fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
+//     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
-    for interface in interface_info {
-        match interface.name.find("lo") {
-            Some(pos) => {
-                if pos != 0 {
-                    cleaned_info.push(interface.clone());
-                }
-            }
+//     for interface in interface_info {
+//         match interface.name.find("lo") {
+//             Some(pos) => {
+//                 if pos != 0 {
+//                     cleaned_info.push(interface.clone());
+//                 }
+//             }
 
-            None => {
-                cleaned_info.push(interface.clone());
-            }
-        }
-    }
-    return cleaned_info;
-}
+//             None => {
+//                 cleaned_info.push(interface.clone());
+//             }
+//         }
+//     }
+//     return cleaned_info;
+// }
 
 fn main() {
     let mut info = NetworkInterface::show().unwrap();
-    // println!("{:?}", info);
-    let info2 = remove_windows(&info);
-    println!("{:?}", info2);
 
-    let info1 = info.pop().unwrap();
-    let addr = &info2[0].addr;
-
-    match addr[0] {
-        V4(v4) => {
-            println!("{:?}", v4);
-            println!("{:?}", v4.netmask.unwrap());
-        }
-
-        V6(v6) => {
-            println!("{:?}", v6);
-        }
-    };
-    // let parsed = json::parse(info1.to_string());
-    // println!("{:?}", addr_v4);
+    info = parser::parser(&info);
+    println!("{:?}", info);
 }
