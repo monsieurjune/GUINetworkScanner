@@ -1,8 +1,5 @@
 use network_interface::{
-    Addr::{
-        V4,
-        V6
-    },
+    Addr::V4,
     NetworkInterface,
 };
 use std::vec::Vec;
