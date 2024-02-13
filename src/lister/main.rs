@@ -1,7 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
-
 use local_ip_address::{list_afinet_netifas, local_ip};
 use network_interface::{
     Addr::{V4, V6},
@@ -10,45 +6,32 @@ use network_interface::{
 
 extern crate json;
 
-fn remove_none_broadcast(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
-
-    for interface in interface_info {
-        for addr in &interface.addr {
-            match addr {
-                V4(v4) => match v4.broadcast {
-                    Some(broadcast) => {
-                        cleaned_info.push(interface.clone());
-                    }
-                    None => {}
-                },
-
-                V6(v6) => match v6.broadcast {
-                    Some(broadcast) => {
-                        cleaned_info.push(interface.clone());
-                    }
-                    None => {}
-                },
-            }
-        }
-    }
-
-    return cleaned_info;
-}
-
 fn remove_windows(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface> {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+    let mut cleaned_info1: Vec<NetworkInterface> = Vec::new();
+    let mut cleaned_info2: Vec<NetworkInterface> = Vec::new();
 
     for interface in interface_info {
         match interface.name.contains("Bluetooth") || interface.name.contains("Loopback") {
             true => {}
             false => {
-                cleaned_info.push(interface.clone());
+                cleaned_info1.push(interface.clone());
             }
         }
     }
 
-    return cleaned_info;
+    for interface in cleaned_info1 {
+        match interface.addr[0] {
+            V4(v4) => match v4.broadcast {
+                Some(_) => {
+                    cleaned_info2.push(interface.clone());
+                }
+                None => {}
+            },
+            V6(_) => {}
+        }
+    }
+
+    cleaned_info2
 }
 
 // fn get_wlan(info: Vec<NetworkInterface>) -> NetworkInterface
@@ -68,7 +51,8 @@ fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterfa
             }
         }
     }
-    return cleaned_info;
+
+    cleaned_info
 }
 
 fn main() {
