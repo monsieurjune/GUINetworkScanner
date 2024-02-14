@@ -1,12 +1,9 @@
 use network_interface::{
+    NetworkInterface,
     Addr::{
         V4,
         V6
     },
-    NetworkInterface,
-    NetworkInterfaceConfig,
-    V4IfAddr,
-    V6IfAddr
 };
 use std::vec::Vec;
 
@@ -15,13 +12,10 @@ pub fn remove_loopback(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInt
     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
     for interface in interface_info {
-        match interface.name.find("lo") {
-            Some(pos) => {
-                if pos != 0 {
-                    cleaned_info.push(interface.clone());
-                }
-            }
-            None => {
+        match interface.name.contains("Bluetooth") || interface.name.contains("Loopback")
+        {
+            true => {}
+            false => {
                 cleaned_info.push(interface.clone());
             }
         }
@@ -34,8 +28,15 @@ pub fn remove_disconnect(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkI
     let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
 
     for interface in interface_info {
-        if interface.addr.len() >= 1 {
-            cleaned_info.push(interface.clone());
+        match interface.addr[0]
+        {
+            V4(v4) => match v4.broadcast {
+                Some(_) => {
+                    cleaned_info.push(interface.clone());
+                }
+                None => {}
+            },
+            V6(_) => {}
         }
     }
     return cleaned_info;
