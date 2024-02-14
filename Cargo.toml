@@ -6,8 +6,12 @@ edition = "2021"
 rust-version = "1.74"
 
 [[bin]]
-name = "lister"
-path = "src/lister/main.rs"
+name = "interface"
+path = "src/interface/main.rs"
+
+[[bin]]
+name = "probe"
+path = "src/probe/main.rs"
 
 [[bin]]
 name = "port_scanner"
