@@ -17,10 +17,6 @@ path = "src/probe/main.rs"
 name = "port_scanner"
 path = "src/port/main.rs"
 
-[[bin]]
-name = "ip_checker"
-path = "src/ipcheck/main.rs"
-
 [profile.dev]
 opt-level = 0
 
