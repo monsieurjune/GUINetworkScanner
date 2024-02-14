@@ -5,7 +5,7 @@ mod window;
 
 pub fn parser(interface_info: &Vec<NetworkInterface>) -> Vec<NetworkInterface>
 {
-    let mut cleaned_info: Vec<NetworkInterface> = Vec::new();
+    let mut cleaned_info: Vec<NetworkInterface>;
 
     if cfg!(target_os = "windows")
     {
