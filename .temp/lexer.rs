@@ -3,57 +3,38 @@ use network_interface::{
         V4,
         V6
     },
+    Netmask,
     NetworkInterface,
 };
 use std::net::Ipv4Addr;
+use ipnet::Ipv4Net;
 
-fn netmask_to_cidr(netmask: Ipv4Addr) -> u8
+fn combine_ip_and_netmask(ip: Ipv4Addr, netmask_res: Netmask<Ipv4Addr>) -> Option<Ipv4Net>
 {
-    let binary: [u8; 4] = netmask.octets();
-    let mut cldr: u8 = 0;
+    let netmark: Ipv4Addr;
 
-    for i in 0..4
-    {
-        for j in 0..8
-        {
-            cldr += if binary[i] & (1 << j) != 0 { 1 } else { 0 };
-        }
+    match netmask_res {
+        Some(res) => { netmark = res },
+        None => { return None; }
     }
-    return cldr;
+
+    match Ipv4Net::with_netmask(ip, netmark) {
+        Ok(ipaddr) => Some(ipaddr),
+        Err(_) => None
+    }
 }
 
-fn combine_ip_and_netmask(ip: Ipv4Addr, netmask: Ipv4Addr) -> String
+pub fn lexer(clean_interfaces: Vec<NetworkInterface>) -> Vec<Ipv4Net>
 {
-    let cldr: u8 = netmask_to_cidr(netmask);
-    let binary: [u8; 4] = ip.octets();
-    let mut ip_str: String = String::new();
-
-    for i in 0..4
-    {
-        ip_str.push_str(&binary[i].to_string());
-        if i != 3 {
-            ip_str.push('.');
-        }
-    }
-    ip_str.push('/');
-    ip_str.push_str(&cldr.to_string());
-    return ip_str;
-}
-
-pub fn lexer(clean_interfaces: Vec<NetworkInterface>) -> Vec<String>
-{
-    let mut ip_list: Vec<String> = Vec::new();
+    let mut ip_list: Vec<Ipv4Net> = Vec::new();
 
     for interface in clean_interfaces
     {
         match interface.addr[0] {
             V4(v4if) => {
-                ip_list.push(
-                    combine_ip_and_netmask(
-                        v4if.ip.clone(),
-                        v4if.netmask.clone().unwrap()
-                    )
-                );
+                match combine_ip_and_netmask(v4if.ip.clone(), v4if.netmask.clone()) {
+                    
+                }
             }
             V6(_) => {}
         }
