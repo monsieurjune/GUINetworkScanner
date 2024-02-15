@@ -110,7 +110,7 @@ fn create_json(interface_info: Vec<NetworkInterface>) -> Result<String, json::Er
     json_array_info = create_json_array(&interface_info);
     json_array = json::parse(&json_array_info.0)?;
     json_final = json::object! {
-        lenght: json_array_info.1,
+        length: json_array_info.1,
         interface: json_array
     };
     return Ok(
