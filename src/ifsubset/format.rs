@@ -5,19 +5,17 @@ use serde::Serialize;
 #[derive(Serialize)]
 struct JsonSubset
 {
-    length: usize,
+    name: String,
     addr_set: Vec<Ipv4Addr>
 }
 
 #[derive(Serialize)]
 struct JsonFormat
 {
-    length: usize,
-    name: String,
     subset: Vec<JsonSubset>
 }
 
-fn manage_subset(host_set: &Vec<Vec<Ipv4Addr>>) -> Vec<JsonSubset>
+fn manage_subset(host_set: &Vec<Vec<Ipv4Addr>>, inter_name: &String) -> Vec<JsonSubset>
 {
     let mut output: Vec<JsonSubset> = Vec::new();
 
@@ -25,8 +23,8 @@ fn manage_subset(host_set: &Vec<Vec<Ipv4Addr>>) -> Vec<JsonSubset>
     {
         output.push(
             JsonSubset {
-                length: subset.len(),
-                addr_set: subset.clone()
+                addr_set: subset.clone(),
+                name: inter_name.clone()
             }
         )
     }
@@ -36,9 +34,7 @@ fn manage_subset(host_set: &Vec<Vec<Ipv4Addr>>) -> Vec<JsonSubset>
 pub fn host_set_to_json(host_set: Vec<Vec<Ipv4Addr>>, inter_name: &String) -> String
 {
     let pre_format: JsonFormat = JsonFormat {
-        length: host_set.len(),
-        name: inter_name.clone(),
-        subset: manage_subset(&host_set)
+        subset: manage_subset(&host_set, inter_name)
     };
     to_string(&pre_format).unwrap()
 }
