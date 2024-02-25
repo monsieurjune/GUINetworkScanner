@@ -48,6 +48,6 @@ fn main() -> Result<(), std::io::Error>
             process::exit(255);
         }
     };
-    println!("here : {}", format::host_set_to_json(host_set));
+    println!("{}", format::host_set_to_json(host_set, &argv[2]));
     Ok(())
 }

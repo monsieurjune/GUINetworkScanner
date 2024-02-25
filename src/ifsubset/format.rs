@@ -13,6 +13,7 @@ struct JsonSubset
 struct JsonFormat
 {
     length: usize,
+    name: String,
     subset: Vec<JsonSubset>
 }
 
@@ -32,10 +33,11 @@ fn manage_subset(host_set: &Vec<Vec<Ipv4Addr>>) -> Vec<JsonSubset>
     output
 }
 
-pub fn host_set_to_json(host_set: Vec<Vec<Ipv4Addr>>) -> String
+pub fn host_set_to_json(host_set: Vec<Vec<Ipv4Addr>>, inter_name: &String) -> String
 {
     let pre_format: JsonFormat = JsonFormat {
         length: host_set.len(),
+        name: inter_name.clone(),
         subset: manage_subset(&host_set)
     };
     to_string(&pre_format).unwrap()
