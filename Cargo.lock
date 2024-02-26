@@ -669,7 +669,7 @@ dependencies = [
  "default-net",
  "hickory-resolver",
  "rand",
- "xenet",
+ "xenet 0.4.0",
 ]
 
 [[package]]
@@ -934,6 +934,7 @@ dependencies = [
  "serde",
  "serde_json",
  "socket2 0.5.5",
+ "xenet 0.5.0",
 ]
 
 [[package]]
@@ -1414,14 +1415,30 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e05ecc03b9d40f9d1d3bfd5e2aa3bb87fe8c0318fa38bf495231250117879bda"
 dependencies = [
- "xenet-core",
- "xenet-datalink",
- "xenet-macro",
- "xenet-macro-helper",
- "xenet-packet",
- "xenet-packet-builder",
- "xenet-socket",
- "xenet-sys",
+ "xenet-core 0.4.0",
+ "xenet-datalink 0.4.0",
+ "xenet-macro 0.4.0",
+ "xenet-macro-helper 0.4.0",
+ "xenet-packet 0.4.0",
+ "xenet-packet-builder 0.4.0",
+ "xenet-socket 0.4.0",
+ "xenet-sys 0.4.0",
+]
+
+[[package]]
+name = "xenet"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b43a8bd74869348d533d3ad3d5d43999475df0cb06a3c9b41b43046f2d24c03"
+dependencies = [
+ "xenet-core 0.5.0",
+ "xenet-datalink 0.5.0",
+ "xenet-macro 0.5.0",
+ "xenet-macro-helper 0.5.0",
+ "xenet-packet 0.5.0",
+ "xenet-packet-builder 0.5.0",
+ "xenet-socket 0.5.0",
+ "xenet-sys 0.5.0",
 ]
 
 [[package]]
@@ -1429,6 +1446,15 @@ name = "xenet-core"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b0bdb72e057b26c9038abe7db1d35c65ca3df6423929f8dc52aa1b082fe755"
+dependencies = [
+ "default-net",
+]
+
+[[package]]
+name = "xenet-core"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7020521e4fdd2ccb1daa13dec93c8cd6e05d10bd362f40a69887d882af95169b"
 dependencies = [
  "default-net",
 ]
@@ -1442,8 +1468,21 @@ dependencies = [
  "default-net",
  "libc",
  "windows-sys 0.48.0",
- "xenet-core",
- "xenet-sys",
+ "xenet-core 0.4.0",
+ "xenet-sys 0.4.0",
+]
+
+[[package]]
+name = "xenet-datalink"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83a26c81328742bd06f7e06342e53fc3c9c9a6ccf3f1ea16a7bca5f8bae27b0f"
+dependencies = [
+ "default-net",
+ "libc",
+ "windows-sys 0.48.0",
+ "xenet-core 0.5.0",
+ "xenet-sys 0.5.0",
 ]
 
 [[package]]
@@ -1459,12 +1498,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "xenet-macro"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a121e7d3108902ead7b18dda6c7a72cf74c633d621354b54ea6df6032ae8ca8"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "regex",
+ "syn",
+]
+
+[[package]]
 name = "xenet-macro-helper"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b82b98144c69dd88b0405ff6c142e2f76bcdc758b14d8e74edca07b3c4f5ebd"
 dependencies = [
- "xenet-core",
+ "xenet-core 0.4.0",
+]
+
+[[package]]
+name = "xenet-macro-helper"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "740b690a6913a6782125faf1cb574a5f8a77c9481a6e13243945b661aab2d7bc"
+dependencies = [
+ "xenet-core 0.5.0",
 ]
 
 [[package]]
@@ -1474,9 +1534,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "004b80223c56f74f9b2685274342835aaccb0469ae46b75b620ffb72f3b36edd"
 dependencies = [
  "rand",
- "xenet-core",
- "xenet-macro",
- "xenet-macro-helper",
+ "xenet-core 0.4.0",
+ "xenet-macro 0.4.0",
+ "xenet-macro-helper 0.4.0",
+]
+
+[[package]]
+name = "xenet-packet"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1278c7ba8eb46fc07a639008aae0bbbbfb9750a4b05a22911443cf6158c5f3f"
+dependencies = [
+ "rand",
+ "xenet-core 0.5.0",
+ "xenet-macro 0.5.0",
+ "xenet-macro-helper 0.5.0",
 ]
 
 [[package]]
@@ -1486,8 +1558,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "769020a2f190b9ccdf3eb0e4ebb4182e2ddb9030ffdf1879bf6663b5232a6465"
 dependencies = [
  "rand",
- "xenet-core",
- "xenet-packet",
+ "xenet-core 0.4.0",
+ "xenet-packet 0.4.0",
+]
+
+[[package]]
+name = "xenet-packet-builder"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1edb874f4f44abf26af39cddecc8ca15edacd374e7225c6e4186e540b857b8d1"
+dependencies = [
+ "rand",
+ "xenet-core 0.5.0",
+ "xenet-packet 0.5.0",
 ]
 
 [[package]]
@@ -1499,7 +1582,19 @@ dependencies = [
  "async-io",
  "socket2 0.5.5",
  "windows-sys 0.48.0",
- "xenet-packet",
+ "xenet-packet 0.4.0",
+]
+
+[[package]]
+name = "xenet-socket"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25e64c58ae2caea7029ca212f60af4f93e62996cb6702e58e21dd47d7e6bb578"
+dependencies = [
+ "async-io",
+ "socket2 0.5.5",
+ "windows-sys 0.48.0",
+ "xenet-packet 0.5.0",
 ]
 
 [[package]]
@@ -1507,6 +1602,16 @@ name = "xenet-sys"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9732bdb937a8c54e68b4869949dc5260b378745a072711003e5e0cf777cc4823"
+dependencies = [
+ "libc",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "xenet-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cc6ff42c9a9030253fa4d4f18ed3668b09576f055d8d63b984efb5e0813ae7c"
 dependencies = [
  "libc",
  "windows-sys 0.48.0",
