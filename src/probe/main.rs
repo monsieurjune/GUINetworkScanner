@@ -1,20 +1,9 @@
-use ipnet::Ipv4AddrRange;
-use network_interface::{
-    Addr,
-    V4IfAddr,
-    NetworkInterface,
-    NetworkInterfaceConfig
-};
 use std::{
     process,
     env
 };
-use std::net::Ipv4Addr;
-use serde::Serialize;
 use serde_json::from_str;
-use serde_json::to_string_pretty;
 extern crate json;
-// mod format;
 mod prober;
 
 fn main() -> Result<(), std::io::Error>

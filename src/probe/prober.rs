@@ -21,12 +21,14 @@ use serde::{
     Serialize,
     Deserialize
 };
-use serde_json::{from_str, to_string_pretty};
+use serde_json::{
+    from_str, 
+    to_string_pretty
+};
 use std::thread::{
     Builder,
     JoinHandle
 };
-use xenet::net::interface;
 mod icmp_ping;
 mod window_ping;
 mod rand_ping;
