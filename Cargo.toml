@@ -10,6 +10,10 @@ name = "interface"
 path = "src/interface/main.rs"
 
 [[bin]]
+name = "ifsubset"
+path = "src/ifsubset/main.rs"
+
+[[bin]]
 name = "probe"
 path = "src/probe/main.rs"
 
@@ -26,7 +30,11 @@ opt-level = 0
 [dependencies]
 lazy_static = "1.4.0"
 json = "0.12"
+xenet = "0.5"
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = { version = "1.0.104", default-features = false, features = ["alloc"] }
 icmp-socket = "0.2.0"
 socket2 = "0.5.5"
 network-interface = "1.1.1"
 ipnet = "2.9.0"
+netprobe = "0.4"

@@ -64,7 +64,7 @@ fn json_array_wrapper(interface: &NetworkInterface, i: usize) -> Option<String>
         Addr::V6(_) => { return None; }
     };
     Some(
-        json::stringify_pretty (
+        json::stringify (
             json::object! {
                 index: i,
                 name: interface.name.clone(),
@@ -72,8 +72,7 @@ fn json_array_wrapper(interface: &NetworkInterface, i: usize) -> Option<String>
                 broadcast: ipv4_to_string(addr.broadcast),
                 netmask: ipv4_to_string(addr.netmask),
                 mac: mac_addr
-            },
-            4
+            }
         )
     )
 }
@@ -114,7 +113,7 @@ fn create_json(interface_info: Vec<NetworkInterface>) -> Result<String, json::Er
         interface: json_array
     };
     return Ok(
-        json::stringify_pretty(json_final, 4)
+        json::stringify(json_final)
     );
 }
 
