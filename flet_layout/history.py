@@ -33,9 +33,10 @@ def main(page: Page):
     )
 
     interface_info = [
-        dropdown.Option("eth0"),
-        dropdown.Option("lo"),
-        dropdown.Option("blu"),
+        dropdown.Option("LAN"),
+        dropdown.Option("Wireless LAN"),
+        dropdown.Option("Loopback"),
+        dropdown.Option("Bluetooth"),
     ]
 
     interface_list = Dropdown(
@@ -129,25 +130,18 @@ def main(page: Page):
                     weight="bold",
                 ),
                 Row(
-                    [
-                        ip_address,
-                        scan_button,
-                    ],
+                    [ip_address, scan_button],
                     alignment="start",
                 ),
                 Row(
-                    [
-                        interface_list,
-                        probe_button,
-                    ],
+                    [interface_list, probe_button],
                     alignment="start",
                 ),
                 Divider(height=7, thickness=5),
                 ip_address_lists,
             ]
         ),
-        Divider(),
-        Row(
+        Column(
             [
                 Text("Scan Results", size=18, weight="bold"),
                 scan_results,

@@ -64,6 +64,7 @@ def main(page: Page):
                 on_select_changed=lambda event: edit_table(
                     event.control.cells[0].content.value,
                     event.control.cells[1].content.value,
+                    event.control.cells[2].content.value,
                 ),
             )
         )
@@ -121,36 +122,51 @@ def main(page: Page):
     )
 
     page.add(
-        Column(
-            [
-                Text(
-                    "Network Scanner Tool with Rust",
-                    size=30,
-                    weight="bold",
-                ),
-                Row(
-                    [
-                        ip_address,
-                        scan_button,
-                    ],
-                    alignment="start",
-                ),
-                Row(
-                    [
-                        interface_list,
-                        probe_button,
-                    ],
-                    alignment="start",
-                ),
-                Divider(height=7, thickness=5),
-                ip_address_lists,
-            ]
-        ),
-        Divider(),
         Row(
             [
-                Text("Scan Results", size=18, weight="bold"),
-                scan_results,
+                Column(
+                    [
+                        Text(
+                            "Network Scanner Tool with Rust",
+                            size=30,
+                            weight="bold",
+                        ),
+                        Row(
+                            [
+                                ip_address,
+                                scan_button,
+                            ],
+                            alignment="start",
+                        ),
+                        Row(
+                            [
+                                interface_list,
+                                probe_button,
+                            ],
+                            alignment="start",
+                        ),
+                        Divider(height=7, thickness=5),
+                        ip_address_lists,
+                    ]
+                ),
+                Divider(),
+                Column(
+                    [
+                        Text("Scan Results", size=18, weight="bold"),
+                        scan_results,
+                    ],
+                ),
+            ],
+        ),
+        Row(
+            [
+                ElevatedButton(
+                    "Settings",
+                    bgcolor="gray",
+                    color="white",
+                    height=50,
+                    width=100,
+                ),
             ],
         ),
     )
