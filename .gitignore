@@ -17,5 +17,8 @@ target/
 .vscode/
 **/.vscode/
 
+# Python Garbage
+**/__pycache__/
+
 # Image
 *.png
