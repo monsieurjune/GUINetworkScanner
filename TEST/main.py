@@ -95,12 +95,7 @@ class App(ctk.CTk):
         dropdown_row = ctk.CTkFrame(master=sidebar_frame)
         dropdown_row.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=5)
 
-        self.interface_list = [
-            "Ethernet",
-            "Wireless LAN",
-            "Bluetooth",
-            "Loopback",
-        ]
+        self.interface_list = ["--Select--", "WLAN", "vEthernet (Default Switch)"]
         variable = tk.StringVar(sidebar_frame)
         variable.set(self.interface_list[0])
 

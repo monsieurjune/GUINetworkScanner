@@ -3,13 +3,9 @@ import customtkinter as ctk
 
 class Content:
     def __init__(self, master):
-        self.master = master
-        self.create_content()
-
-    def create_content(self):
-        content_frame = ctk.CTkFrame(self.master)
-        content_frame.grid(row=1, column=1, sticky="nsew")
-        self.scan_result_list(content_frame)
+        self.content_frame = ctk.CTkFrame(master)
+        self.content_frame.grid(row=1, column=1, sticky="nsew")
+        self.scan_result_list(self.content_frame)
 
     def scan_result_list(self, content_frame):
         scan_result = [

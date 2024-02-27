@@ -3,7 +3,9 @@ import json
 
 
 def interface_info():
-    result = subprocess.Popen(".\\target\\debug\\interface.exe", stdout=subprocess.PIPE)
+    result = subprocess.Popen(
+        ".\\target\\release\\interface.exe", stdout=subprocess.PIPE
+    )
 
     out, _ = result.communicate()
 

@@ -141,7 +141,6 @@ if __name__ == "__main__":
     app = App()
     app.mainloop()
 
-
     # def scan_result_list(self, content_frame):
     #     header_frame = ctk.CTkFrame(content_frame)
     #     header_frame.pack()
@@ -170,6 +169,4 @@ if __name__ == "__main__":
     #         ["1", "TCP", "69", "KUAY", "OPEN"],
     #         ["2", "UDP", "420", "HEE", "FILTERED"],
     #         ["3", "TCP", "55555", "TAD", "OPEN"],
-        # ]
-
-
+    # ]
