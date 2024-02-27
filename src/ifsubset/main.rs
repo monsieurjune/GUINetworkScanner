@@ -26,6 +26,10 @@ fn argv_check(argv: &Vec<String>) -> Result<(json::JsonValue, usize), ()>
     }
 }
 
+// ifsubset [interfaces's json] [specific interface's name] [amout of subset's member]
+// EXAMPLE
+// ifsubset (interfaces json variable) wlan0 256
+
 fn main() -> Result<(), std::io::Error>
 {
     let argv: Vec<String> = env::args().collect();
