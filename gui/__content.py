@@ -1,6 +1,20 @@
+import csv
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
+
+from utils.ip_address import get_result
+
+
+def read_port_csv(file_path):  # -> dict:
+    port_map = {}
+    with open(file_path, newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            port = int(row["port"])
+            description = row["description"]
+            port_map[port] = description
+    return port_map
 
 
 class Content:
@@ -21,13 +35,7 @@ class Content:
         )
         title_label.pack(pady=15)
 
-        header_labels: list[str] = [
-            "#",
-            "IP Address",
-            "Protocol",
-            "Port",
-            "Description",
-        ]
+        header_labels: list[str] = ["#", "IP Address", "Port", "Description"]
 
         # Scan Result Table
         tree = ttk.Treeview(
@@ -61,16 +69,29 @@ class Content:
             tree.heading(column=col, text=col)
             tree.column(column=col, width=self.column_width, anchor="center")
 
-        #! TODO: Replace with actual scan result
-        scan_result: list[list[str]] = [
-            ["1", "TCP", "69", "KUAY", "OPEN"],
-            ["2", "UDP", "420", "HEE", "FILTERED"],
-            ["3", "TCP", "55555", "TAD", "OPEN"],
-        ]
+        # Data
+        data = get_result()
+        print("Data:", data)
+        ip_address = data.get("ipaddr", "No IP Address Found")
+        tcp_port = data.get("tcp_port", [])
 
-        # Insert Data
-        for item in scan_result:
-            tree.insert(parent="", index=tk.END, values=item)
+        print("IP Address:", ip_address)
+        print("TCP Ports:", tcp_port)
+
+        if not tcp_port:
+            print("No TCP Ports Found")
+            return
+
+        port_map = read_port_csv("gui/utils/tcp.csv")
+
+        for i, port in enumerate(tcp_port, start=1):
+            description = port_map.get(port, "Unknown")
+            print("Inserting:", i, ip_address, port, description)
+            tree.insert(
+                parent="",
+                index=tk.END,
+                values=[str(i), ip_address, str(port), description],
+            )
 
 
 if __name__ == "__main__":

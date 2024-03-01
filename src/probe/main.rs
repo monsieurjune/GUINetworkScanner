@@ -1,13 +1,11 @@
-use std::{
-    process,
-    env
-};
 use serde_json::from_str;
+use std::{env, process};
+
 extern crate json;
+
 mod prober;
 
-fn main() -> Result<(), std::io::Error>
-{
+fn main() -> Result<(), std::io::Error> {
     let argv: Vec<String> = env::args().collect();
     let obj: prober::Prober;
 

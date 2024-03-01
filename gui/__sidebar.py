@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 
+from __content import Content
 from utils.interface import interface_info
 
 
@@ -9,13 +10,19 @@ class Sidebar(ctk.CTkFrame):
     def __init__(self, master) -> None:
         super().__init__(master=master, width=330)
 
+        if master is None:
+            return
+
         self.grid(row=1, column=0, sticky="nsew")
         self.grid_columnconfigure(index=0, weight=0)
 
         self.column_width = 120
 
         self.interface_list = interface_info()
-        self.ip_addresses: list = []
+        self.ip_addresses = []
+        self.selected_ip_address = []
+
+        self.result_frame = ctk.CTkFrame(master=self)
 
         # Input Frame
         self.input_frame = ctk.CTkFrame(master=self, fg_color="transparent")
@@ -132,7 +139,13 @@ class Sidebar(ctk.CTkFrame):
         ctk.CTkButton(
             master=self.button_frame,
             text="Scan",
+            command=self.scan,
         ).grid(row=0, column=0, columnspan=2, padx=25, pady=5, sticky="ew")
+
+    def scan(self) -> None:
+        global scan_state
+        print("Scanning ...")
+        self.content = Content(master=self.master)
 
     def add_ip_address(self) -> None:
         new_ip_address: str = self.input_entry.get()
@@ -143,7 +156,9 @@ class Sidebar(ctk.CTkFrame):
             self.ip_addresses.append(new_row)
             self.ip_address_list()
 
-    def ip_address_list(self) -> None:
+    def ip_address_list(self):
+        global tree
+
         for widget in self.table_frame.winfo_children():
             widget.destroy()
 
@@ -164,10 +179,12 @@ class Sidebar(ctk.CTkFrame):
             foreground="white",
             rowheight=25,
             fieldbackground="#343638",
-            bordercolor="#343638",
-            borderwidth=0,
         )
-        style.map(style="Treeview", background=[("selected", "#22559b")])
+        style.map(
+            style="Treeview",
+            background=[("selected", "#22559b")],
+            foreground=[("selected", "yellow")],
+        )
         style.configure(
             style="Treeview.Heading",
             background="#565b5e",
@@ -188,8 +205,36 @@ class Sidebar(ctk.CTkFrame):
         tree.column(column="#", width=50, anchor="center")
         tree.column(column="IP Address", width=200, anchor="center")
 
-        # Set the height of the treeview to 10 rows
         tree.configure(height=10)
+
+        # Set the height of the treeview to 10 rows
+        tree.bind(sequence="<ButtonRelease-1>", func=self.on_tree_select)
+        tree.bind(sequence="<Double-Button-1>", func=self.select_ip_address)
+
+    def select_ip_address(self, event):
+        item = tree.focus()
+        if not item:
+            return
+
+        selected_ip = tree.item(item)["values"][1]
+
+        if selected_ip in self.selected_ip_address:
+            self.selected_ip_address.remove(selected_ip)
+        else:
+            self.selected_ip_address.append(selected_ip)
+
+        print("Selected IP Addresses:")
+        for ip in self.selected_ip_address:
+            print(ip)
+
+    def on_tree_select(self, event):
+        selected_items = tree.selection()
+
+        for item in tree.get_children():
+            tree.item(item, tags=[])
+
+        for item in selected_items:
+            tree.item(item, tags="selected")
 
     def update_interface_list(self) -> None:
         interfaces = interface_info()
