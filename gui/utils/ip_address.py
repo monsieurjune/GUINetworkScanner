@@ -2,22 +2,25 @@ import json
 import subprocess
 
 
-def get_ip_data():
-    result = subprocess.Popen(
-        ".\\target\\release\\port_scanner.exe 127.0.0.1,fast,test",
-        stdout=subprocess.PIPE,
+def get_ip_data(ip_address, mode):
+    result = subprocess.run(
+        ["./target/release/port_scanner.exe", f"{ip_address},{mode},test"],
+        capture_output=True,
+        text=True,
     )
-
-    out, _ = result.communicate()
-    return str(out.decode("utf-8"))
+    return result.stdout
 
 
 def get_result():
-    return json.loads(get_ip_data())
+    ip_addressed: list[str] = []
+    return json.loads(get_ip_data("127.0.0.1", "fast"))
 
 
 def main():
-    print(get_result())
+    result = get_result()
+    print(result)
+    with open("result.txt", "w") as f:
+        json.dump(result, f, indent=4)
 
 
 if __name__ == "__main__":

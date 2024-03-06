@@ -50,7 +50,6 @@ class Content:
             style="Treeview",
             background="#2a2d2e",
             foreground="white",
-            rowheight=25,
             fieldbackground="#343638",
             bordercolor="#343638",
             borderwidth=0,
