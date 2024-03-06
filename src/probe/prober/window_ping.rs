@@ -1,5 +1,4 @@
 use std::time::Duration;
-use std::sync::mpsc::Sender;
 use std::net::{
     TcpStream,
     SocketAddr,
@@ -16,12 +15,7 @@ fn msrpc_ping(ipaddr: Ipv4Addr) -> bool
     match TcpStream::connect_timeout(&sockaddr, time) {
         Ok(_) => true,
         Err(ref e) if e.kind() == ConnectionRefused => true,
-        Err(e) => {
-            if ipaddr.to_string() == "10.18.10.69" {
-                eprintln!("{:?}", e);
-            }
-            false
-        }
+        Err(_) => false
     }
 }
 

@@ -2,18 +2,13 @@ use serde::{
     Deserialize,
     Serialize
 };
+use std::thread::{
+    Builder, 
+    JoinHandle
+};
 use serde_json::to_string;
 use std::net::Ipv4Addr;
-use std::sync::mpsc::{
-    channel, 
-    Receiver, 
-    Sender
-};
-use std::thread::{Builder, JoinHandle};
-use std::{
-    process, 
-    time::Duration
-};
+use std::process;
 
 mod icmp_ping;
 mod rand_ping;
@@ -46,16 +41,12 @@ impl Prober {
         }
     }
 
-    fn thread_listener(length: usize, rx: Receiver<Ipv4Addr>) -> Vec<Ipv4Addr> {
-        let mut result: Vec<Ipv4Addr> = Vec::new();
-        let time: Duration = Duration::new(0, 030_000_000);
-
-        for _ in 0..length {
-            if let Ok(val) = rx.recv_timeout(time) {
-                result.push(val);
-            }
+    fn join_result(handler: JoinHandle<Option<Ipv4Addr>>) -> Option<Ipv4Addr>
+    {
+        match handler.join() {
+            Ok(val) => val,
+            Err(_) => None
         }
-        result
     }
 
     fn thread_joiner(handler_list: Vec<JoinHandle<Option<Ipv4Addr>>>) -> Vec<Ipv4Addr>
@@ -63,18 +54,12 @@ impl Prober {
         let mut result_vec: Vec<Ipv4Addr> = Vec::with_capacity(256);
 
         for handler in handler_list {
-            match handler.join() {
-                Ok(val) => {
-                    match val {
-                        Some(ipaddr) => {
-                            result_vec.push(ipaddr);
-                        }
-                        None => {}
-                    }
+            match Prober::join_result(handler) {
+                Some(val) => {
+                    result_vec.push(val);
                 }
-                Err(_) => {}
+                None => {}
             }
-            
         }
         result_vec
     }
