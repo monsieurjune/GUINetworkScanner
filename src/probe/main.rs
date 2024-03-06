@@ -1,8 +1,6 @@
 use serde_json::from_str;
 use std::{env, process};
 
-extern crate json;
-
 mod prober;
 
 fn main() -> Result<(), std::io::Error> {
