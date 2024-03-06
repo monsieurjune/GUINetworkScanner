@@ -1,6 +1,7 @@
 from tkinter import messagebox
 from tkinter.ttk import Treeview, Scrollbar
 from ttkwidgets import CheckboxTreeview
+import json
 from customtkinter import (
     CTk,
     CTkFrame,
@@ -12,6 +13,54 @@ from customtkinter import (
     CTkRadioButton,
     StringVar,
 )
+from utils import (
+    interface,
+    ip_address,
+    probe
+)
+
+
+# ip_addresses: list[str] = [f"192.168.1.{n}" for n in range(1, 17)]
+
+# for index, ip_address in enumerate(iterable=ip_addresses):
+#     ip_address_treeview.insert(
+#         parent="", index="end", iid=index, text=ip_address, tags=("unchecked",)
+#     )
+
+def probe_update():
+    json_set = probe.get_ip_subset(
+        network_interface_json, 
+        select_interface.get(), 
+        16
+    )
+    j = 0
+    ip_address_treeview.delete(*ip_address_treeview.get_children())
+    ip_address_treeview.update()
+    for subset in json_set["subset"]:
+        probe_result = probe.probe_subset(subset)
+        for res in probe_result["addr_set"]:
+            ip_address_treeview.insert(
+                parent="", index="end", iid=j, text=res, tags=("unchecked")
+            )
+            ip_address_treeview.update()
+            j += 1
+    pass
+
+def insert_ipaddr():
+    member = ip_address_treeview.get_children()
+    n = member.__len__()
+    value = ip_address_entry.get()
+    value_json = json.dumps({
+        'name': select_interface.get(),
+        'addr_set': [value]
+        })
+    result = probe.probe_subset(json.loads(value_json))
+    if result is None:
+        messagebox.showinfo(title="Error", message=f"{value} not found")
+        return
+    ip_address_treeview.insert(
+        parent="", index="end", iid=n+1, text=result["addr_set"][0], tags=("unchecked")
+    )
 
 app = CTk()
 app.geometry(geometry_string="960x720")
@@ -57,7 +106,7 @@ add_ip_button = CTkButton(
     height=30,
     corner_radius=15,
     fg_color="#6B9FDC",
-    command=lambda: print("add ip address"),
+    command=lambda: insert_ipaddr(),
 )
 add_ip_button.grid(row=1, column=1, padx=5)
 
@@ -73,7 +122,9 @@ network_interface_label = CTkLabel(
 )
 network_interface_label.grid(row=0, column=0, padx=5, pady=(10, 0), sticky="w")
 
-network_interfaces: list[str] = ["eth0", "wlan0", "wlan1", "wlan2", "wlan3"]
+network_interface_json = interface.interface_info()
+network_interfaces: list[str] = interface.get_interfaces_name()
+select_interface = StringVar(value=network_interfaces[0])
 network_interface_dropdown = CTkComboBox(
     master=network_interface_section,
     values=network_interfaces,
@@ -83,6 +134,7 @@ network_interface_dropdown = CTkComboBox(
     dropdown_font=("JetBrains Mono", 13),
     state="readonly",
     variable=StringVar(value=network_interfaces[0]),
+    
 )
 network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0)
 
@@ -95,7 +147,7 @@ probe_button = CTkButton(
     corner_radius=15,
     fg_color="#A469C4",
     hover_color="#8069C4",
-    command=lambda: print("probe"),
+    command=lambda: probe_update(),
 )
 probe_button.grid(row=1, column=1, padx=5)
 

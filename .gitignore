@@ -16,6 +16,7 @@ target/
 # Vscode Garbage
 .vscode/
 **/.vscode/
+*.json
 
 # Python Garbage
 **/__pycache__/
