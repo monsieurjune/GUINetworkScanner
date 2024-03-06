@@ -8,46 +8,43 @@ use std::net::{
 };
 use std::io::ErrorKind::ConnectionRefused;
 
-fn tx_handler(tx: &Sender<Ipv4Addr>, ipaddr: Ipv4Addr) -> bool
+fn msrpc_ping(ipaddr: Ipv4Addr) -> bool
 {
-    match tx.send(ipaddr) {
+    let sockaddr: SocketAddr = SocketAddr::new(IpAddr::V4(ipaddr), 135);
+	let time: Duration = Duration::new(0, 100_000_000);
+
+    match TcpStream::connect_timeout(&sockaddr, time) {
         Ok(_) => true,
-        Err(_) => false
+        Err(ref e) if e.kind() == ConnectionRefused => true,
+        Err(e) => {
+            if ipaddr.to_string() == "10.18.10.69" {
+                eprintln!("{:?}", e);
+            }
+            false
+        }
     }
 }
 
-fn msrpc_ping(sockaddr: &SocketAddr) -> bool
+fn msds_ping(ipaddr: Ipv4Addr) -> bool
 {
-	let time: Duration = Duration::new(0, 030_000_000);
+    let sockaddr: SocketAddr = SocketAddr::new(IpAddr::V4(ipaddr), 445);
+	let time: Duration = Duration::new(0, 100_000_000);
 
-    match TcpStream::connect_timeout(sockaddr, time) {
+    match TcpStream::connect_timeout(&sockaddr, time) {
         Ok(_) => true,
         Err(ref e) if e.kind() == ConnectionRefused => true,
         Err(_) => false
     }
 }
 
-fn msds_ping(sockaddr: &SocketAddr) -> bool
+pub fn ping(ipaddr: Ipv4Addr) -> Option<Ipv4Addr>
 {
-	let time: Duration = Duration::new(0, 030_000_000);
-
-    match TcpStream::connect_timeout(sockaddr, time) {
-        Ok(_) => true,
-        Err(ref e) if e.kind() == ConnectionRefused => true,
-        Err(_) => false
-    }
-}
-
-pub fn ping(ipaddr: Ipv4Addr, tx: &Sender<Ipv4Addr>) -> bool
-{
-    let ip_with_port: SocketAddr = SocketAddr::new(IpAddr::V4(ipaddr), 135);
-
-    if msrpc_ping(&ip_with_port) {
-        return tx_handler(&tx, ipaddr)
+    if msrpc_ping(ipaddr.clone()) {
+        return Some(ipaddr);
     };
-    if msds_ping(&ip_with_port) {
-        return tx_handler(&tx, ipaddr);
+    if msds_ping(ipaddr.clone()) {
+        return Some(ipaddr);
     }
-    false
+    None
 }
 
