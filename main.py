@@ -62,6 +62,12 @@ def insert_ipaddr():
         parent="", index="end", iid=n+1, text=result["addr_set"][0], tags=("unchecked")
     )
 
+def scan():
+    checked_iter = ip_address_treeview.get_checked()
+    for checked in checked_iter:
+        check_ip = ip_address_treeview.item(checked)['text']
+        print(ip)
+
 app = CTk()
 app.geometry(geometry_string="960x720")
 app.resizable(width=False, height=False)
@@ -256,7 +262,7 @@ scan_button = CTkButton(
     corner_radius=25,
     bg_color="transparent",
     fg_color="#FEDCBA",
-    command=lambda: print("scan started!"),
+    command=lambda: scan(),
 )
 scan_button.grid(row=3, column=0, columnspan=2, padx=5, pady=35, sticky="nsew")
 
