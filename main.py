@@ -196,11 +196,35 @@ ip_address_treeview.configure(yscroll=ip_address_list_scrollbar.set)
 ip_address_list_scrollbar.grid(row=1, column=2, padx=0, pady=(5, 0), sticky="ns")
 
 ip_addresses: list[str] = ["127.0.0.1"]
+selected_ip_addresses: list[str] = []
 
 for index, ip_address in enumerate(iterable=ip_addresses):
     ip_address_treeview.insert(
         parent="", index="end", iid=index, text=ip_address, tags=("unchecked",)
     )
+
+
+def select_all():
+    for child_iid in ip_address_treeview.get_children():
+        ip_address_treeview.item(item=child_iid, tags=("checked",))
+
+
+def unselect_all():
+    for child_iid in ip_address_treeview.get_children():
+        ip_address_treeview.item(item=child_iid, tags=("unchecked",))
+
+
+def handle_checkbox_change(event):
+    item_iid = ip_address_treeview.identify_row(event.y)
+    item_text = ip_address_treeview.item(item=item_iid, option="text")
+
+    if ip_address_treeview.tag_has(tagname="checked", item=item_iid):
+        print(f"Selected IP Address: {item_text}")
+        if item_text not in selected_ip_addresses:
+            selected_ip_addresses.append(item_text)
+    elif item_text in selected_ip_addresses:
+        selected_ip_addresses.remove(item_text)
+
 
 ip_address_check_all_button = CTkButton(
     master=ip_address_list_frame,
@@ -208,7 +232,7 @@ ip_address_check_all_button = CTkButton(
     bg_color="transparent",
     width=100,
     height=25,
-    command=lambda: print("select all"),
+    command=select_all,
 )
 ip_address_check_all_button.grid(row=2, column=0, padx=5, pady=5)
 
@@ -219,9 +243,11 @@ ip_address_uncheck_all_button = CTkButton(
     fg_color="#CD6464",
     width=100,
     height=25,
-    command=lambda: print("unselect all"),
+    command=unselect_all,
 )
 ip_address_uncheck_all_button.grid(row=2, column=1, padx=5, pady=5)
+
+ip_address_treeview.bind(sequence="<<TreeviewSelect>>", func=handle_checkbox_change)
 
 scan_option_frame = CTkFrame(
     master=left_frame, bg_color="transparent", fg_color="#123456"
