@@ -19,6 +19,5 @@ pub fn scan(ip: &IpAddr, subset: Vec<u16>) -> Vec<(u16, String)> {
             }
         }
     }
-
-    return port_status;
+    port_status
 }
