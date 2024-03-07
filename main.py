@@ -19,14 +19,6 @@ from utils import (
     probe
 )
 
-
-# ip_addresses: list[str] = [f"192.168.1.{n}" for n in range(1, 17)]
-
-# for index, ip_address in enumerate(iterable=ip_addresses):
-#     ip_address_treeview.insert(
-#         parent="", index="end", iid=index, text=ip_address, tags=("unchecked",)
-#     )
-
 def probe_update():
     json_set = probe.get_ip_subset(
         network_interface_json, 
@@ -44,7 +36,6 @@ def probe_update():
             )
             ip_address_treeview.update()
             j += 1
-    pass
 
 def insert_ipaddr():
     member = ip_address_treeview.get_children()

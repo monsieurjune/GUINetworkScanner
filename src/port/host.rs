@@ -2,7 +2,6 @@ mod map;
 mod scanmode;
 mod tcp_connect;
 mod thread_utils;
-mod udp_connect;
 
 use self::map::Map;
 use self::thread_utils::JoinHd;
@@ -14,6 +13,7 @@ use std::str::FromStr;
 
 type Mode = Option<ScanMode>;
 
+#[allow(dead_code)]
 pub struct Host {
     ip: IpAddr,
     tcp_mode: Mode,
@@ -67,15 +67,13 @@ impl Host {
         }?;
         tcp_result = Host::choice_to_scanmode(tcp_choice, &TCP_MAP, tcp_choice != &"No")?;
         udp_result = Host::choice_to_scanmode(udp_choice, &UDP_MAP, udp_choice != &"No")?;
-        return Ok(Host {
-            ip: ip_res,
-            tcp_mode: tcp_result,
-            udp_mode: udp_result,
-        });
-    }
-
-    pub fn get_ipaddr(&self) -> IpAddr {
-        self.ip
+        Ok(
+            Host {
+                ip: ip_res,
+                tcp_mode: tcp_result,
+                udp_mode: udp_result,
+            }
+        )
     }
 
     fn portlist_to_json(&self, port_result: Vec<u16>) -> String {
@@ -103,7 +101,7 @@ impl Host {
             subset_thread = thread_utils::thread_builder(ip, subset, subset_no.to_string(), func);
             thread_handler_list.push(subset_thread);
         }
-        return thread_utils::thread_joiner(thread_handler_list);
+        thread_utils::thread_joiner(thread_handler_list)
     }
 
     pub fn tcp_connect_scan(&self) -> String {
@@ -113,16 +111,6 @@ impl Host {
             return String::from("");
         }
         ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_connect::scan);
-        return Host::portlist_to_json(self, ports_list);
-    }
-
-    pub fn udp_connect_scan(&self) -> String {
-        let ports_list: Vec<u16>;
-
-        if self.udp_mode.is_none() {
-            return String::from("");
-        }
-        ports_list = Host::scanner_helper(self, &self.udp_mode, udp_connect::scan);
-        return Host::portlist_to_json(self, ports_list);
+        Host::portlist_to_json(self, ports_list)
     }
 }

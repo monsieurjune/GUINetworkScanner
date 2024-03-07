@@ -1,10 +1,7 @@
 use std::env;
-use std::net::Ipv4Addr;
 use std::process;
 use std::str::Split;
-
 use host::Host;
-
 mod host;
 
 fn argv_to_list(argv: &[String]) -> Vec<(String, String, String)> {
@@ -39,23 +36,20 @@ fn main() -> std::io::Result<()> {
     let mut host_list: Vec<Host> = Vec::new();
 
     if argv.len() <= 0 {
-        process::exit(1)
+        process::exit(255)
     }
 
     list = argv_to_list(&argv[1..]);
     for val in list {
         match Host::new(&val.0, &val.1, &val.2) {
             Ok(host) => host_list.push(host),
-            Err(e) => panic!("Error !!! : {:?}", e),
+            Err(_) => {
+                process::exit(255)
+            },
         }
     }
-    // println!("------------------------------------------");
     for a_host in &host_list {
         println!("{}", a_host.tcp_connect_scan());
     }
-    // println!("------------------------------------------");
-    // for a_host in &host_list {
-    //     println!("{} : {}", a_host.get_ipaddr(), a_host.udp_connect_scan());
-    // }
     Ok(())
 }
