@@ -12,10 +12,11 @@ from customtkinter import (
     CTkCheckBox,
     CTkRadioButton,
     StringVar,
+    IntVar
 )
 from utils import (
     interface,
-    ip_address,
+    scanner,
     probe
 )
 
@@ -25,8 +26,11 @@ def probe_update():
         select_interface.get(), 
         16
     )
-    j = 0
+    j = 1
     ip_address_treeview.delete(*ip_address_treeview.get_children())
+    ip_address_treeview.insert(
+        parent="", index="end", iid=0, text="127.0.0.1", tags=("unchecked")
+    )
     ip_address_treeview.update()
     for subset in json_set["subset"]:
         probe_result = probe.probe_subset(subset)
@@ -44,7 +48,7 @@ def insert_ipaddr():
     value_json = json.dumps({
         'name': select_interface.get(),
         'addr_set': [value]
-        })
+    })
     result = probe.probe_subset(json.loads(value_json))
     if result is None:
         messagebox.showinfo(title="Error", message=f"{value} not found")
@@ -55,9 +59,18 @@ def insert_ipaddr():
 
 def scan():
     checked_iter = ip_address_treeview.get_checked()
+    mode = scan_option_mode_radio_var.get()
+    if mode == 1:
+        mode_str = "fast"
+    elif mode == 2:
+        mode_str = "full"
+    else:
+        mode_str = "No"
+    
     for checked in checked_iter:
         check_ip = ip_address_treeview.item(checked)['text']
-        print(ip)
+        result_json = scanner.tcp_scan(check_ip, mode_str)
+        
 
 app = CTk()
 app.geometry(geometry_string="960x720")
@@ -131,7 +144,6 @@ network_interface_dropdown = CTkComboBox(
     dropdown_font=("JetBrains Mono", 13),
     state="readonly",
     variable=StringVar(value=network_interfaces[0]),
-    
 )
 network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0)
 
@@ -174,7 +186,7 @@ ip_address_list_scrollbar = Scrollbar(
 ip_address_treeview.configure(yscroll=ip_address_list_scrollbar.set)
 ip_address_list_scrollbar.grid(row=1, column=2, padx=0, pady=(5, 0), sticky="ns")
 
-ip_addresses: list[str] = [f"192.168.1.{n}" for n in range(1, 17)]
+ip_addresses: list[str] = ["127.0.0.1"]
 
 for index, ip_address in enumerate(iterable=ip_addresses):
     ip_address_treeview.insert(
@@ -238,10 +250,25 @@ scan_option_mode_label = CTkLabel(
 )
 scan_option_mode_label.grid(row=1, column=1, padx=15, pady=5, sticky="nsew")
 
-scan_option_mode_radio = CTkRadioButton(
-    master=scan_option_frame, text="Quick", font=("JetBrains Mono", 12, "bold")
+scan_option_mode_radio_var = IntVar()
+scan_option_mode_radio1 = CTkRadioButton(
+    master=scan_option_frame, 
+    text="Quick", 
+    font=("JetBrains Mono", 12, "bold"), 
+    variable=scan_option_mode_radio_var,
+    value=1,
 )
-scan_option_mode_radio.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+scan_option_mode_radio1.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+scan_option_mode_radio1.select()
+
+scan_option_mode_radio2 = CTkRadioButton(
+    master=scan_option_frame, 
+    text="Full", 
+    font=("JetBrains Mono", 12, "bold"), 
+    variable=scan_option_mode_radio_var,
+    value=2
+)
+scan_option_mode_radio2.grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
 scan_button = CTkButton(
     master=scan_option_frame,
@@ -255,7 +282,7 @@ scan_button = CTkButton(
     fg_color="#FEDCBA",
     command=lambda: scan(),
 )
-scan_button.grid(row=3, column=0, columnspan=2, padx=5, pady=35, sticky="nsew")
+scan_button.grid(row=4, column=0, columnspan=2, padx=5, pady=35, sticky="nsew")
 
 
 right_frame = CTkFrame(master=app, width=640, height=720, fg_color="#E3E3E3")

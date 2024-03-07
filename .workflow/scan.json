@@ -1,0 +1,13 @@
+{
+    "ipaddr": "127.0.0.1",
+    "tcp_ports": [
+        {
+            "port": 35435,
+            "status": "Open"
+        },
+        {
+            "port": 45335,
+            "status": "Open"
+        }
+    ]
+}
