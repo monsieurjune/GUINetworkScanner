@@ -2,7 +2,6 @@ mod map;
 mod scanmode;
 mod tcp_connect;
 mod thread_utils;
-mod udp_connect;
 
 use self::map::Map;
 use self::thread_utils::JoinHd;
@@ -14,6 +13,7 @@ use std::str::FromStr;
 
 type Mode = Option<ScanMode>;
 
+#[allow(dead_code)]
 pub struct Host {
     ip: IpAddr,
     tcp_mode: Mode,
@@ -27,9 +27,15 @@ pub enum HostError {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct ScanResultInfo {
+    port: u16,
+    status: String
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct ScanResult {
     ipaddr: IpAddr,
-    tcp_port: Vec<u16>,
+    tcp_ports: Vec<ScanResultInfo>,
 }
 
 impl Host {
@@ -67,30 +73,47 @@ impl Host {
         }?;
         tcp_result = Host::choice_to_scanmode(tcp_choice, &TCP_MAP, tcp_choice != &"No")?;
         udp_result = Host::choice_to_scanmode(udp_choice, &UDP_MAP, udp_choice != &"No")?;
-        return Ok(Host {
-            ip: ip_res,
-            tcp_mode: tcp_result,
-            udp_mode: udp_result,
-        });
+        Ok(
+            Host {
+                ip: ip_res,
+                tcp_mode: tcp_result,
+                udp_mode: udp_result,
+            }
+        )
     }
 
-    pub fn get_ipaddr(&self) -> IpAddr {
-        self.ip
+    fn portlist_to_scaninfo(port_result: Vec<(u16, String)>) -> Vec<ScanResultInfo>
+    {
+        let mut infos: Vec<ScanResultInfo> = Vec::new();
+        let mut info: ScanResultInfo;
+
+        for res in port_result
+        {
+            info = ScanResultInfo {
+                port: res.0,
+                status: res.1
+            };
+            infos.push(info);
+        }
+        infos
     }
 
-    fn portlist_to_json(&self, port_result: Vec<u16>) -> String {
+    fn portlist_to_json(&self, 
+                        port_result: Vec<(u16, String)>
+                    ) -> Result<String, serde_json::Error> 
+    {
         let format = ScanResult {
             ipaddr: self.ip.clone(),
-            tcp_port: port_result,
+            tcp_ports: Host::portlist_to_scaninfo(port_result),
         };
-        serde_json::to_string(&format).unwrap()
+        serde_json::to_string(&format)
     }
 
     fn scanner_helper(
         &self,
         obj_mode: &Option<ScanMode>,
         func: thread_utils::ScanFunc,
-    ) -> Vec<u16> {
+    ) -> Vec<(u16, String)> {
         let ip = self.ip.clone();
         let mode: &ScanMode = &obj_mode.as_ref().unwrap();
         let n: u16 = mode.subset_len();
@@ -103,26 +126,20 @@ impl Host {
             subset_thread = thread_utils::thread_builder(ip, subset, subset_no.to_string(), func);
             thread_handler_list.push(subset_thread);
         }
-        return thread_utils::thread_joiner(thread_handler_list);
+        thread_utils::thread_joiner(thread_handler_list)
     }
 
-    pub fn tcp_connect_scan(&self) -> String {
-        let ports_list: Vec<u16>;
+    pub fn tcp_connect_scan(&self) -> Result<Option<String>, serde_json::Error>  {
+        let ports_list: Vec<(u16, String)>;
+        // let nothing: ScanResult;
 
         if self.tcp_mode.is_none() {
-            return String::from("");
+            return Ok(None);
         }
         ports_list = Host::scanner_helper(self, &self.tcp_mode, tcp_connect::scan);
-        return Host::portlist_to_json(self, ports_list);
-    }
-
-    pub fn udp_connect_scan(&self) -> String {
-        let ports_list: Vec<u16>;
-
-        if self.udp_mode.is_none() {
-            return String::from("");
+        match Host::portlist_to_json(self, ports_list) {
+            Ok(val) => Ok(Some(val)),
+            Err(e) => Err(e)
         }
-        ports_list = Host::scanner_helper(self, &self.udp_mode, udp_connect::scan);
-        return Host::portlist_to_json(self, ports_list);
     }
 }

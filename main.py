@@ -19,14 +19,6 @@ from utils import (
     probe
 )
 
-
-# ip_addresses: list[str] = [f"192.168.1.{n}" for n in range(1, 17)]
-
-# for index, ip_address in enumerate(iterable=ip_addresses):
-#     ip_address_treeview.insert(
-#         parent="", index="end", iid=index, text=ip_address, tags=("unchecked",)
-#     )
-
 def probe_update():
     json_set = probe.get_ip_subset(
         network_interface_json, 
@@ -44,7 +36,6 @@ def probe_update():
             )
             ip_address_treeview.update()
             j += 1
-    pass
 
 def insert_ipaddr():
     member = ip_address_treeview.get_children()
@@ -61,6 +52,12 @@ def insert_ipaddr():
     ip_address_treeview.insert(
         parent="", index="end", iid=n+1, text=result["addr_set"][0], tags=("unchecked")
     )
+
+def scan():
+    checked_iter = ip_address_treeview.get_checked()
+    for checked in checked_iter:
+        check_ip = ip_address_treeview.item(checked)['text']
+        print(ip)
 
 app = CTk()
 app.geometry(geometry_string="960x720")
@@ -256,7 +253,7 @@ scan_button = CTkButton(
     corner_radius=25,
     bg_color="transparent",
     fg_color="#FEDCBA",
-    command=lambda: print("scan started!"),
+    command=lambda: scan(),
 )
 scan_button.grid(row=3, column=0, columnspan=2, padx=5, pady=35, sticky="nsew")
 

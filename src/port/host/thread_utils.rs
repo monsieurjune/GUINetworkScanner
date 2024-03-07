@@ -6,12 +6,16 @@ use std::net::IpAddr;
 use std::any::Any;
 use std::process;
 
-pub type JoinHd = JoinHandle<Vec<u16>>;
-pub type ScanFunc = fn(&IpAddr, Vec<u16>) -> Vec<u16>;
+pub type JoinHd = JoinHandle<Vec<(u16, String)>>;
+pub type ScanFunc = fn(&IpAddr, Vec<u16>) -> Vec<(u16, String)>;
 type JoinErr = Box<(dyn Any + Send + 'static)>;
-type JoinRes = Result<Vec<u16>, JoinErr>;
+type JoinRes = Result<Vec<(u16, String)>, JoinErr>;
 
-pub fn thread_builder(ip: IpAddr, subset: Vec<u16>, subset_name: String, func: ScanFunc) -> JoinHd
+pub fn thread_builder(ip: IpAddr, 
+						subset: Vec<u16>, 
+						subset_name: String, 
+						func: ScanFunc
+					) -> JoinHd
 {
 	let builder: Builder = Builder::new()
 							.name(subset_name)
@@ -27,11 +31,11 @@ pub fn thread_builder(ip: IpAddr, subset: Vec<u16>, subset_name: String, func: S
 	}
 }
 
-pub fn thread_joiner(thread_hd_list: Vec<JoinHd>) -> Vec<u16>
+pub fn thread_joiner(thread_hd_list: Vec<JoinHd>) -> Vec<(u16, String)>
 {
 	let mut result: JoinRes;
 	let mut result_list: Vec<JoinRes> = Vec::new();
-	let mut port_result: Vec<u16> = Vec::new();
+	let mut port_result: Vec<(u16, String)> = Vec::new();
 
 	for handler in thread_hd_list
 	{
