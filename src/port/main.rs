@@ -49,7 +49,16 @@ fn main() -> std::io::Result<()> {
         }
     }
     for a_host in &host_list {
-        println!("{}", a_host.tcp_connect_scan());
+        match a_host.tcp_connect_scan() {
+            Ok(val) => {
+                if let Some(res) = val {
+                    println!("{}", res);
+                };
+            }
+            Err(_) => {
+                process::exit(255);
+            }
+        }
     }
     Ok(())
 }
