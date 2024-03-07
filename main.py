@@ -65,6 +65,7 @@ def insert_ipaddr():
 
 def scan():
     checked_iter = ip_address_treeview.get_checked()
+    global scan_results
 
     mode = scan_mode_var.get()
     if mode == 1:
@@ -74,9 +75,13 @@ def scan():
     else:
         mode_str = "No"
 
+    scan_results.clear()
     for checked in checked_iter:
         check_ip = ip_address_treeview.item(item=checked)["text"]
         result_json = scanner.tcp_scan(ipaddr=check_ip, mode=mode_str)
+        scan_results.append(result_json)
+    scan_result_tree.delete(*scan_result_tree.get_children())
+    insert_data()
 
 
 app = CTk()
@@ -374,22 +379,22 @@ treeview_style.configure(
 
 #! TODO: This is just a dummy data, replace it with actual scan results
 scan_results = [
-    {
-        "ipaddr": "127.0.0.1",
-        "tcp_ports": [
-            {"port": 135, "status": "Open"},
-            {"port": 445, "status": "Open"},
-            {"port": 1462, "status": "Open"},
-            {"port": 2179, "status": "Open"},
-            {"port": 4808, "status": "Open"},
-            {"port": 5040, "status": "Open"},
-            {"port": 5432, "status": "Open"},
-            {"port": 8974, "status": "Open"},
-            {"port": 9080, "status": "Open"},
-            {"port": 9100, "status": "Open"},
-            {"port": 9180, "status": "Open"},
-        ],
-    },
+    # {
+    #     "ipaddr": "127.0.0.1",
+    #     "tcp_ports": [
+    #         {"port": 135, "status": "Open"},
+    #         {"port": 445, "status": "Open"},
+    #         {"port": 1462, "status": "Open"},
+    #         {"port": 2179, "status": "Open"},
+    #         {"port": 4808, "status": "Open"},
+    #         {"port": 5040, "status": "Open"},
+    #         {"port": 5432, "status": "Open"},
+    #         {"port": 8974, "status": "Open"},
+    #         {"port": 9080, "status": "Open"},
+    #         {"port": 9100, "status": "Open"},
+    #         {"port": 9180, "status": "Open"},
+    #     ],
+    # },
     {
         "ipaddr": "192.168.1.1",
         "tcp_ports": [
