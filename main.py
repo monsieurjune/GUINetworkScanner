@@ -1,3 +1,5 @@
+import csv
+
 from tkinter import messagebox
 from tkinter.ttk import Treeview, Scrollbar, Style
 from ttkwidgets import CheckboxTreeview
@@ -14,6 +16,7 @@ from customtkinter import (
     StringVar,
     IntVar,
 )
+
 from utils import interface, scanner, probe
 
 
@@ -111,7 +114,7 @@ ip_address_entry = CTkEntry(
     width=150,
     height=30,
 )
-ip_address_entry.grid(row=1, column=0, padx=5, pady=0)
+ip_address_entry.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 
 add_ip_button = CTkButton(
     master=ip_address_section,
@@ -150,7 +153,7 @@ network_interface_dropdown = CTkComboBox(
     state="readonly",
     variable=StringVar(value=network_interfaces[0]),
 )
-network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0)
+network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 
 probe_button = CTkButton(
     master=network_interface_section,
@@ -230,7 +233,7 @@ ip_address_check_all_button = CTkButton(
     master=ip_address_list_frame,
     text="Select All",
     bg_color="transparent",
-    width=100,
+    width=90,
     height=25,
     command=select_all,
 )
@@ -241,7 +244,7 @@ ip_address_uncheck_all_button = CTkButton(
     text="Unselect All",
     bg_color="transparent",
     fg_color="#CD6464",
-    width=100,
+    width=90,
     height=25,
     command=unselect_all,
 )
@@ -369,23 +372,83 @@ treeview_style.configure(
     rowheight=25,
 )
 
-scan_result_tree_columns = ("ip_address", "protocol", "description", "status")
-scan_result_tree = Treeview(
-    master=scan_result_frame,
-    columns=scan_result_tree_columns,
-    show="headings",
-    style="Treeview",
-)
+#! TODO: This is just a dummy data, replace it with actual scan results
+scan_results = {
+    "ipaddr": "127.0.0.1",
+    "tcp_ports": [
+        {"port": 135, "status": "Open"},
+        {"port": 445, "status": "Open"},
+        {"port": 1462, "status": "Open"},
+        {"port": 2179, "status": "Open"},
+        {"port": 4808, "status": "Open"},
+        {"port": 5040, "status": "Open"},
+        {"port": 5432, "status": "Open"},
+        {"port": 8974, "status": "Open"},
+        {"port": 9080, "status": "Open"},
+        {"port": 9100, "status": "Open"},
+        {"port": 9180, "status": "Open"},
+    ],
+    "ipaddr": "192.168.1.1",
+    "tcp_ports": [
+        {"port": 135, "status": "Open"},
+        {"port": 445, "status": "Open"},
+        {"port": 1462, "status": "Open"},
+        {"port": 2179, "status": "Open"},
+        {"port": 9080, "status": "Open"},
+        {"port": 9100, "status": "Open"},
+        {"port": 9180, "status": "Open"},
+    ],
+    "ipaddr": "123.456.789",
+    "tcp_ports": [
+        {"port": 1462, "status": "Open"},
+        {"port": 2179, "status": "Open"},
+        {"port": 4808, "status": "Open"},
+        {"port": 5040, "status": "Open"},
+        {"port": 5432, "status": "Open"},
+        {"port": 9100, "status": "Open"},
+        {"port": 9180, "status": "Open"},
+    ],
+}
 
-scan_result_tree.column(column="ip_address", width=100, minwidth=100)
+scan_result_tree = Treeview(master=scan_result_frame, style="Treeview")
+scan_result_tree.grid(row=0, column=0, sticky="nsew")
+
+scan_result_tree["columns"] = ("port", "protocol", "description")
+scan_result_tree.column(column="#0", width=110, minwidth=110, stretch=False)
+scan_result_tree.column(column="port", width=60, minwidth=60)
 scan_result_tree.column(column="protocol", width=60, minwidth=60)
 scan_result_tree.column(column="description", width=270, minwidth=270)
-scan_result_tree.column(column="status", width=80, minwidth=80)
 
-scan_result_tree.heading(column="ip_address", text="IP Address", anchor="w")
-scan_result_tree.heading(column="protocol", text="Protocol", anchor="w")
-scan_result_tree.heading(column="description", text="Description", anchor="w")
-scan_result_tree.heading(column="status", text="Status", anchor="w")
+scan_result_tree.heading(column="#0", text="IP Address", anchor="c")
+scan_result_tree.heading(column="port", text="Port", anchor="c")
+scan_result_tree.heading(column="protocol", text="Protocol", anchor="c")
+scan_result_tree.heading(column="description", text="Description", anchor="c")
+
+
+port_descriptions = {}
+with open(file=r"ports_list/tcp.csv", mode="r") as port_list:
+    reader = csv.reader(port_list)
+    next(reader)
+    for row in reader:
+        protocol, port, description = row
+        port_descriptions[port] = description
+
+
+def insert_data():
+    ip_address = scan_results["ipaddr"]
+    ip_iid = scan_result_tree.insert(parent="", index="end", text=ip_address)
+
+    protocol = "TCP"
+    for port_data in scan_results["tcp_ports"]:
+        port = str(port_data["port"])
+        description = port_descriptions.get(port, "Unknown")
+
+        scan_result_tree.insert(
+            parent=ip_iid, index="end", values=(port, protocol, description)
+        )
+
+
+insert_data()
 
 
 def item_selected(event):
@@ -395,8 +458,7 @@ def item_selected(event):
         messagebox.showinfo(title="Scan Result", message=", ".join(record))
 
 
-scan_result_tree.bind("<<TreeviewSelect>>", func=item_selected)
-scan_result_tree.grid(row=0, column=0, sticky="nsew")
+# scan_result_tree.bind("<<TreeviewSelect>>", func=item_selected)
 
 scrollbar = Scrollbar(
     master=scan_result_frame,
@@ -408,9 +470,9 @@ scrollbar = Scrollbar(
 scan_result_tree.configure(yscrollcommand=scrollbar.set)
 scrollbar.grid(row=0, column=1, sticky="ns")
 
-scan_results = []
-for scan_result in scan_results:
-    scan_result_tree.insert(parent="", index="end", values=scan_result)
+# scan_results = []
+# for scan_result in scan_results:
+#     scan_result_tree.insert(parent="", index="end", values=scan_result)
 
 
 bottom_frame = CTkFrame(
