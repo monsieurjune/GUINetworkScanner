@@ -395,18 +395,18 @@ scan_results = [
     #         {"port": 9180, "status": "Open"},
     #     ],
     # },
-    {
-        "ipaddr": "192.168.1.1",
-        "tcp_ports": [
-            {"port": 135, "status": "Open"},
-            {"port": 445, "status": "Open"},
-            {"port": 1462, "status": "Open"},
-            {"port": 2179, "status": "Open"},
-            {"port": 9080, "status": "Open"},
-            {"port": 9100, "status": "Open"},
-            {"port": 9180, "status": "Open"},
-        ],
-    }
+    # {
+    #     "ipaddr": "192.168.1.1",
+    #     "tcp_ports": [
+    #         {"port": 135, "status": "Open"},
+    #         {"port": 445, "status": "Open"},
+    #         {"port": 1462, "status": "Open"},
+    #         {"port": 2179, "status": "Open"},
+    #         {"port": 9080, "status": "Open"},
+    #         {"port": 9100, "status": "Open"},
+    #         {"port": 9180, "status": "Open"},
+    #     ],
+    # }
 ]
 
 scan_result_tree = Treeview(master=scan_result_frame, style="Treeview")
@@ -435,7 +435,13 @@ with open(file=r"ports_list/tcp.csv", mode="r") as port_list:
 
 def insert_data():
     for i, ip_address in enumerate(iterable=scan_results):
-        ip_iid = scan_result_tree.insert(parent="", index="end", text=ip_address["ipaddr"])
+        desp = "Open Port(s) : " + str(ip_address["tcp_ports"].__len__())
+        ip_iid = scan_result_tree.insert(
+            parent="", 
+            index="end",
+            text=ip_address["ipaddr"],
+            value=("", "", desp)
+        )
         
         for j, port_data in enumerate(iterable=ip_address["tcp_ports"]):
             port = str(port_data["port"])
