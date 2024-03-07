@@ -7,8 +7,36 @@ use std::thread::{
     JoinHandle
 };
 use serde_json::to_string;
-use std::net::Ipv4Addr;
 use std::process;
+
+extern crate pnet;
+use std::net::{IpAddr, Ipv4Addr, TcpListener};
+use rand::{thread_rng, Rng};
+use pnet::transport::{
+    ipv4_packet_iter, tcp_packet_iter, transport_channel, TransportChannelType
+};
+use pnet::packet::{
+    ip::{
+        IpNextHeaderProtocol,
+        IpNextHeaderProtocols
+    },
+    ipv4::{
+        self,
+        Ipv4Packet,
+        MutableIpv4Packet,
+        Ipv4Flags
+    },
+    tcp::{
+        self,
+        MutableTcpPacket,
+        TcpFlags
+    }
+};
+
+use pnet::datalink::{self, NetworkInterface};
+use pnet::datalink::Channel::Ethernet;
+use pnet::packet::{Packet, MutablePacket};
+use pnet::packet::ethernet::{EthernetPacket, MutableEthernetPacket};
 
 mod icmp_ping;
 mod rand_ping;
@@ -64,7 +92,18 @@ impl Prober {
         result_vec
     }
 
-    pub fn probe(&self) -> Result<String, serde_json::Error> {
+    pub fn probe(&self, inter_addr: Ipv4Addr) -> Result<String, serde_json::Error> {
+        let interface_names_match =
+            |iface: &NetworkInterface| iface.ips[0].contains(IpAddr::V4(inter_addr));
+        let interfaces: Vec<NetworkInterface> = datalink::interfaces();
+        let interface: NetworkInterface;
+        
+        interface = match interfaces.into_iter().filter(interface_names_match).next() {
+            Some(val) => Ok(val),
+            None => Err(serde_json::error::Category::Io)
+        }?;
+        
+
         let length: usize = self.addr_set.len();
         let result_list: Vec<Ipv4Addr>;
         let prober_res: Prober;
