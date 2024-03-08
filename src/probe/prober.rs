@@ -1,4 +1,4 @@
-use pnet::packet::tcp::TcpPacket;
+extern crate pnet;
 use serde::{
     Deserialize,
     Serialize
@@ -7,42 +7,32 @@ use std::thread::{
     Builder, 
     JoinHandle
 };
-use std::time::Duration;
-use serde_json::to_string;
-use std::process;
-
-extern crate pnet;
-use std::net::{IpAddr, Ipv4Addr, TcpListener};
-use rand::{thread_rng, Rng};
-use pnet::transport::{
-    ipv4_packet_iter, tcp_packet_iter, transport_channel, TransportChannelType, TransportReceiver, TransportSender
+use std::net::{
+    IpAddr, 
+    Ipv4Addr
 };
-use pnet::packet::{
-    ip::{
-        IpNextHeaderProtocol,
-        IpNextHeaderProtocols
-    },
-    ipv4::{
-        self,
-        Ipv4Packet,
-        MutableIpv4Packet,
-        Ipv4Flags
-    },
-    tcp::{
-        self,
-        MutableTcpPacket,
-        TcpFlags
-    }
+use rand::{
+    thread_rng, 
+    Rng
+};
+use std::sync::mpsc::{
+    channel, 
+    Sender
+};
+use pnet::datalink::{
+    self, 
+    DataLinkReceiver, 
+    NetworkInterface
 };
 use std::time::SystemTime;
-
-use std::sync::mpsc::{
-    self, channel, Receiver, Sender
-};
-use pnet::datalink::{self, DataLinkReceiver, NetworkInterface};
+use serde_json::to_string;
+use std::process;
 use pnet::datalink::Channel::Ethernet;
-use pnet::packet::{Packet, MutablePacket};
-use pnet::packet::ethernet::{EthernetPacket, MutableEthernetPacket};
+use pnet::packet::{
+    Packet,
+    ipv4::Ipv4Packet
+};
+use pnet::packet::ethernet::EthernetPacket;
 
 mod icmp_ping;
 mod rand_ping;

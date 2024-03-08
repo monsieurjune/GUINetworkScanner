@@ -1,22 +1,18 @@
-use std::time::Duration;
+extern crate pnet;
 use std::net::{
-    TcpStream,
-    SocketAddr,
     IpAddr,
     Ipv4Addr
 };
-use std::io::ErrorKind::ConnectionRefused;
-
-extern crate pnet;
-use rand::{thread_rng, Rng};
+use rand::{
+    thread_rng,
+    Rng
+};
 use pnet::transport::{
-    ipv4_packet_iter, tcp_packet_iter, transport_channel, TransportChannelType, TransportSender
+    transport_channel,
+    TransportChannelType
 };
 use pnet::packet::{
-    ip::{
-        IpNextHeaderProtocol,
-        IpNextHeaderProtocols
-    },
+    ip::IpNextHeaderProtocols,
     ipv4::{
         self,
         Ipv4Packet,
@@ -29,15 +25,6 @@ use pnet::packet::{
         TcpFlags
     }
 };
-use std::time::SystemTime;
-
-use std::sync::mpsc::{
-    self, channel, Receiver, Sender
-};
-use pnet::datalink::{self, DataLinkReceiver, NetworkInterface};
-use pnet::datalink::Channel::Ethernet;
-use pnet::packet::{Packet, MutablePacket};
-use pnet::packet::ethernet::{EthernetPacket, MutableEthernetPacket};
 
 const IPV4_HEADER_SIZE: usize = 20;
 const TCP_HEADER_SIZE: usize = 20;
@@ -85,7 +72,7 @@ fn create_tcp_syn(
     tcp_header.set_checksum(checksum);
 } 
 
-fn msrpc_ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
+fn tcp_ping(dst: Ipv4Addr, src: Ipv4Addr, dst_port: u16, src_port: u16)
 {
     let mut buff = [0u8; IPV4_HEADER_SIZE + TCP_HEADER_SIZE + TCP_DATA_SIZE];
     let protocal = IpNextHeaderProtocols::Ipv4;
@@ -94,22 +81,7 @@ fn msrpc_ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
 
     if let Ok((mut tx, mut _rx)) = transport_channel(1024, type1) {
         create_ipv4_header(&mut buff, dst, src);
-        create_tcp_syn(&mut buff, dst, src, 135, src_port);
-        payload = Ipv4Packet::new(&buff).unwrap();
-        let _ = tx.send_to(payload, IpAddr::V4(dst));
-    }    
-}
-
-fn msds_ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
-{
-    let mut buff = [0u8; IPV4_HEADER_SIZE + TCP_HEADER_SIZE + TCP_DATA_SIZE];
-    let protocal = IpNextHeaderProtocols::Ipv4;
-    let type1 = TransportChannelType::Layer3(protocal);
-    let payload: Ipv4Packet<'_>;
-
-    if let Ok((mut tx, mut _rx)) = transport_channel(1024, type1) {
-        create_ipv4_header(&mut buff, dst, src);
-        create_tcp_syn(&mut buff, dst, src, 135, src_port);
+        create_tcp_syn(&mut buff, dst, src, dst_port, src_port);
         payload = Ipv4Packet::new(&buff).unwrap();
         let _ = tx.send_to(payload, IpAddr::V4(dst));
     } 
@@ -117,7 +89,14 @@ fn msds_ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
 
 pub fn ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
 {
-    msrpc_ping(dst, src, src_port);
-    msds_ping(dst, src, src_port);
+    let mut rng = rand::thread_rng();
+    let port_list: Vec<u16> = (0..8).map(|_| rng.gen_range(0..65535)).collect();
+
+    tcp_ping(dst, src, 135, src_port);
+    tcp_ping(dst, src, 445, src_port);
+
+    for port in port_list {
+        tcp_ping(dst, src, port, src_port);
+    }
 }
 
