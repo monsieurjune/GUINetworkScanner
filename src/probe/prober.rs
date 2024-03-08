@@ -92,23 +92,34 @@ impl Prober {
         result_vec
     }
 
-    pub fn probe(&self, inter_addr: Ipv4Addr) -> Result<String, serde_json::Error> {
+    fn find_match_interface(inter_addr: Ipv4Addr) -> Result<NetworkInterface, ()>
+    {
+        let interfaces: Vec<NetworkInterface> = datalink::interfaces();
         let interface_names_match =
             |iface: &NetworkInterface| iface.ips[0].contains(IpAddr::V4(inter_addr));
-        let interfaces: Vec<NetworkInterface> = datalink::interfaces();
-        let interface: NetworkInterface;
         
-        interface = match interfaces.into_iter().filter(interface_names_match).next() {
+        match interfaces
+                .into_iter()
+                .filter(interface_names_match)
+                .next() {
             Some(val) => Ok(val),
-            None => Err(serde_json::error::Category::Io)
-        }?;
-        
+            None => Err(())
+        }
+    }
 
+    pub fn probe(&self, inter_addr: Ipv4Addr) -> Result<String, ()> {
         let length: usize = self.addr_set.len();
         let result_list: Vec<Ipv4Addr>;
         let prober_res: Prober;
-        let mut handler_list: Vec<JoinHandle<Option<Ipv4Addr>>> = Vec::new();
         let mut handler: JoinHandle<Option<Ipv4Addr>>;
+        let mut handler_list: Vec<JoinHandle<Option<Ipv4Addr>>> = Vec::new();
+        let interface: NetworkInterface = Prober::find_match_interface(inter_addr)?;
+
+        let (mut e_tx, mut e_rx) = match datalink::channel(&interface, Default::default()){
+            Ok(Ethernet(tx, rx)) => Ok((tx, rx)),
+            Ok(_) => Err(()),
+            Err(_) => Err(())
+        }?;
 
         for i in 0..length {
             handler = Prober::thread_builder(&self, self.addr_set[i].clone(), i);
@@ -119,6 +130,9 @@ impl Prober {
             name: self.name.clone(),
             addr_set: result_list
         };
-        to_string(&prober_res)
+        match to_string(&prober_res) {
+            Ok(val) => Ok(val),
+            Err(_) => Err(())
+        }
     }
 }
