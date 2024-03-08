@@ -35,7 +35,6 @@ use pnet::packet::{
 use pnet::packet::ethernet::EthernetPacket;
 
 mod icmp_ping;
-mod rand_ping;
 mod window_ping;
 
 #[derive(Serialize, Deserialize)]
