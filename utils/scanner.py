@@ -1,18 +1,29 @@
 import json
 import subprocess
 
-def tcp_scan(ipaddr, mode):
-    cmd = [
+# port tcp fast 192.168.1.1 interface 
+
+def tcp_scan(ipaddr, inter_addr, tcp, mode, passwd):
+    cmd1 = [
+        "echo",
+        passwd
+    ]
+    cmd2 = [
+        "sudo",
+        "-S",
         r"./target/release/port",
-        f"{ipaddr},{mode},No"
+        tcp,
+        mode,
+        ipaddr,
+        inter_addr
     ]
 
-    result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out, _ = result.communicate()
-    exit_code = result.wait()
+    result1 = subprocess.Popen(args=cmd1, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    output = subprocess.check_output(cmd2, stdin=result1.stdout, stderr=subprocess.DEVNULL)
+    exit_code = result1.wait()
 
     return (
-        json.loads(str(object=out.decode(encoding="utf-8"))) if exit_code == 0 else None
+        json.loads(str(object=output.decode(encoding="utf-8"))) if exit_code == 0 else None
     )
 
 

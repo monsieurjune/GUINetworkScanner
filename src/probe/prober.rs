@@ -67,10 +67,11 @@ impl Prober {
         }
     }
 
-    fn get_probe_result(mut e_rx: Box<dyn DataLinkReceiver>, 
-                        input_subset: Vec<Ipv4Addr>, 
-                        res_t: Sender<Vec<Ipv4Addr>>,
-                    ) -> Result<JoinHandle<()>, ()>
+    fn get_probe_result(
+        mut e_rx: Box<dyn DataLinkReceiver>, 
+        input_subset: Vec<Ipv4Addr>, 
+        res_t: Sender<Vec<Ipv4Addr>>,
+    ) -> Result<JoinHandle<()>, ()>
     {
         let builder: Builder = Builder::new().stack_size(32 * 1024);
 

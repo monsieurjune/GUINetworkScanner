@@ -156,7 +156,7 @@ impl Host {
                                     Some(tcp_pack1) => {
                                         let source_port = tcp_pack1.get_source();
                                         if tcp_pack1.get_flags() == (TcpFlags::ACK | TcpFlags::SYN) {
-                                            println!("{}:{}", source_addr, source_port);
+                                            // println!("{}:{}", source_addr, source_port);
                                             match list {
                                                 Some(ref val) => {
                                                     if val.contains(&source_port) {
@@ -220,7 +220,7 @@ impl Host {
         func: fn(Ipv4Addr, Ipv4Addr, Vec<u16>, u16)
     )
     {
-        let ip = self.ip.clone();
+        // let ip = self.ip.clone();
         let mode: &ScanMode = &obj_mode.as_ref().unwrap();
         let n: u16 = mode.subset_len();
         let mut subset: Vec<u16>;

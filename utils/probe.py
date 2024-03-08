@@ -9,7 +9,7 @@ def get_ip_subset(interface_info, interface_name, subset_no):
         str(subset_no),
     ]
 
-    result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     out, _ = result.communicate()
     exit_code = result.wait()
 
@@ -31,10 +31,10 @@ def probe_subset(subset, inter_addr, passwd):
         inter_addr
     ]
 
-    print("Start : ", subset)
-    result1 = subprocess.Popen(args=cmd1, stdout=subprocess.PIPE)
-    output = subprocess.check_output(cmd2, stdin=result1.stdout)
-    print("End : ", output)
+    # print("Start : ", subset)
+    result1 = subprocess.Popen(args=cmd1, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    output = subprocess.check_output(cmd2, stdin=result1.stdout, stderr=subprocess.DEVNULL)
+    # print("End : ", output)
     exit_code = result1.wait()
 
     # print(out)

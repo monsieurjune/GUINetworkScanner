@@ -13,13 +13,14 @@ from customtkinter import (
     CTkComboBox,
     CTkCheckBox,
     CTkRadioButton,
+    CTkToplevel,
     StringVar,
     IntVar,
 )
 
 passwd = r""
 
-from utils import interface, scanner, probe
+from utils import interface, scanner, probe, passwd
 
 def find_addr_of_select_interface():
     select = network_interface_dropdown.get()
@@ -81,6 +82,7 @@ def scan():
     global scan_results
 
     mode = scan_mode_var.get()
+    select_ip = find_addr_of_select_interface()
     if mode == 1:
         mode_str = "fast"
     elif mode == 2:
@@ -91,7 +93,13 @@ def scan():
     scan_results.clear()
     for checked in checked_iter:
         check_ip = ip_address_treeview.item(item=checked)["text"]
-        result_json = scanner.tcp_scan(ipaddr=check_ip, mode=mode_str)
+        result_json = scanner.tcp_scan(
+            ipaddr=check_ip,
+            inter_addr=select_ip,
+            tcp="tcp",
+            mode=mode_str,
+            passwd=passwd
+        )
         scan_results.append(result_json)
     scan_result_tree.delete(*scan_result_tree.get_children())
     insert_data()
@@ -101,6 +109,31 @@ app = CTk()
 app.geometry(geometry_string="960x720")
 app.resizable(width=False, height=False)
 app.title(string="Network Scanner Tool with Rust")
+
+
+def login(window):
+    password = password_entry.get()
+    state = passwd.check_password(password)
+    window.destroy()
+    if state != 0:
+        exit(255)
+
+login_password = ""
+top_level = CTkToplevel(master=app)
+top_level.geometry(geometry_string="220x80")
+top_level.resizable(width=False, height=False)
+top_level.title(string="Login")
+top_level.attributes("-topmost", True)
+
+password_label = CTkLabel(master=top_level, text="Password")
+password_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+password_entry = CTkEntry(master=top_level, placeholder_text="Enter Password...")
+password_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+login_button = CTkButton(master=top_level, text="Login", command=lambda: login(window=top_level))
+login_button.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+
 
 left_frame = CTkFrame(
     master=app,
@@ -281,35 +314,14 @@ scan_option_label = CTkLabel(
     text="Scan Option",
     font=("JetBrains Mono", 16, "bold"),
 )
-scan_option_label.grid(row=0, column=0, columnspan=2, pady=(25, 0), sticky="nsew")
-
-scan_option_protocol_label = CTkLabel(
-    master=scan_option_frame,
-    text="Protocol:",
-    font=("JetBrains Mono", 13, "bold"),
-)
-scan_option_protocol_label.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
-
-scan_protocol_tcp = CTkCheckBox(
-    master=scan_option_frame,
-    text="TCP",
-    font=("JetBrains Mono", 12, "bold"),
-)
-scan_protocol_tcp.grid(row=2, column=0, padx=5, pady=5)
-
-scan_protocol_udp = CTkCheckBox(
-    master=scan_option_frame,
-    text="UDP",
-    font=("JetBrains Mono", 12, "bold"),
-)
-scan_protocol_udp.grid(row=3, column=0, padx=5, pady=5)
+scan_option_label.grid(row=0, column=0, columnspan=2, pady=(15, 0), sticky="nsew")
 
 scan_option_mode_label = CTkLabel(
     master=scan_option_frame,
     text="Scan Mode:",
     font=("JetBrains Mono", 13, "bold"),
 )
-scan_option_mode_label.grid(row=1, column=1, padx=15, pady=5, sticky="nsew")
+scan_option_mode_label.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
 
 scan_mode_var = IntVar()
 scan_mode_fast = CTkRadioButton(
@@ -319,7 +331,7 @@ scan_mode_fast = CTkRadioButton(
     variable=scan_mode_var,
     value=1,
 )
-scan_mode_fast.grid(row=2, column=1, padx=5, pady=5)
+scan_mode_fast.grid(row=2, column=0, padx=(50, 0), pady=5, sticky="nsew")
 scan_mode_fast.select()
 
 scan_mode_full = CTkRadioButton(
@@ -329,7 +341,7 @@ scan_mode_full = CTkRadioButton(
     variable=scan_mode_var,
     value=2,
 )
-scan_mode_full.grid(row=3, column=1, padx=5, pady=5)
+scan_mode_full.grid(row=3, column=0, padx=(50, 0), pady=5, sticky="nsew")
 
 scan_button = CTkButton(
     master=scan_option_frame,
