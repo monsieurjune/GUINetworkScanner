@@ -1,5 +1,7 @@
+import csv
+import time;
 from tkinter import messagebox
-from tkinter.ttk import Treeview, Scrollbar
+from tkinter.ttk import Treeview, Scrollbar, Style
 from ttkwidgets import CheckboxTreeview
 import json
 from customtkinter import (
@@ -12,78 +14,102 @@ from customtkinter import (
     CTkCheckBox,
     CTkRadioButton,
     StringVar,
-    IntVar
+    IntVar,
 )
-from utils import (
-    interface,
-    scanner,
-    probe
-)
+
+passwd = r""
+
+from utils import interface, scanner, probe
+
+def find_addr_of_select_interface():
+    select = network_interface_dropdown.get()
+    for inter in network_interface_json["interface"]:
+        if inter["name"] == select:
+            return inter["addr"]
+    return None
 
 def probe_update():
     json_set = probe.get_ip_subset(
-        network_interface_json, 
-        select_interface.get(), 
-        16
+        interface_info=network_interface_json,
+        interface_name=network_interface_dropdown.get(),
+        subset_no=16,
     )
-    j = 1
     ip_address_treeview.delete(*ip_address_treeview.get_children())
     ip_address_treeview.insert(
         parent="", index="end", iid=0, text="127.0.0.1", tags=("unchecked")
     )
     ip_address_treeview.update()
+
+    j = 1
+    select_ip = find_addr_of_select_interface()
+    if select_ip is None:
+        return
     for subset in json_set["subset"]:
-        probe_result = probe.probe_subset(subset)
+        probe_result = probe.probe_subset(subset=subset, inter_addr=select_ip, passwd=passwd)
         for res in probe_result["addr_set"]:
             ip_address_treeview.insert(
                 parent="", index="end", iid=j, text=res, tags=("unchecked")
             )
             ip_address_treeview.update()
             j += 1
+        time.sleep(1)
+
 
 def insert_ipaddr():
     member = ip_address_treeview.get_children()
-    n = member.__len__()
     value = ip_address_entry.get()
-    value_json = json.dumps({
-        'name': select_interface.get(),
-        'addr_set': [value]
-    })
-    result = probe.probe_subset(json.loads(value_json))
+    value_json = json.dumps({"name": network_interface_dropdown.get(), "addr_set": [value]})
+    select_ip = find_addr_of_select_interface()
+
+    result = probe.probe_subset(subset=json.loads(value_json), inter_addr=select_ip, passwd=passwd)
     if result is None:
         messagebox.showinfo(title="Error", message=f"{value} not found")
         return
+
+    n = member.__len__()
     ip_address_treeview.insert(
-        parent="", index="end", iid=n+1, text=result["addr_set"][0], tags=("unchecked")
+        parent="",
+        index="end",
+        iid=n + 1,
+        text=result["addr_set"][0],
+        tags=("unchecked"),
     )
+
 
 def scan():
     checked_iter = ip_address_treeview.get_checked()
-    mode = scan_option_mode_radio_var.get()
+    global scan_results
+
+    mode = scan_mode_var.get()
     if mode == 1:
         mode_str = "fast"
     elif mode == 2:
         mode_str = "full"
     else:
         mode_str = "No"
-    
+
+    scan_results.clear()
     for checked in checked_iter:
-        check_ip = ip_address_treeview.item(checked)['text']
-        result_json = scanner.tcp_scan(check_ip, mode_str)
-        
+        check_ip = ip_address_treeview.item(item=checked)["text"]
+        result_json = scanner.tcp_scan(ipaddr=check_ip, mode=mode_str)
+        scan_results.append(result_json)
+    scan_result_tree.delete(*scan_result_tree.get_children())
+    insert_data()
+
 
 app = CTk()
 app.geometry(geometry_string="960x720")
 app.resizable(width=False, height=False)
 app.title(string="Network Scanner Tool with Rust")
-app.columnconfigure(index=0, weight=1)
 
 left_frame = CTkFrame(
     master=app,
     width=320,
     height=720,
-    bg_color="transparent",
+    bg_color="#123456",
     fg_color="#123456",
+    corner_radius=0,
+    border_width=0,
 )
 left_frame.pack(side="left", fill="both", expand=True)
 
@@ -106,7 +132,7 @@ ip_address_entry = CTkEntry(
     width=150,
     height=30,
 )
-ip_address_entry.grid(row=1, column=0, padx=5, pady=0)
+ip_address_entry.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 
 add_ip_button = CTkButton(
     master=ip_address_section,
@@ -140,12 +166,12 @@ network_interface_dropdown = CTkComboBox(
     values=network_interfaces,
     width=150,
     height=30,
-    font=("JetBrains Mono", 13),
+    font=("JetBrains Mono", 11),
     dropdown_font=("JetBrains Mono", 13),
     state="readonly",
-    variable=StringVar(value=network_interfaces[0]),
+    variable=select_interface
 )
-network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0)
+network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 
 probe_button = CTkButton(
     master=network_interface_section,
@@ -181,25 +207,53 @@ ip_address_treeview = CheckboxTreeview(
 ip_address_treeview.grid(row=1, column=0, columnspan=2, pady=(5, 0))
 
 ip_address_list_scrollbar = Scrollbar(
-    master=ip_address_list_frame, orient="vertical", command=ip_address_treeview.yview
+    master=ip_address_list_frame,
+    orient="vertical",
+    command=ip_address_treeview.yview,
+    style="TScrollbar",
+    cursor="arrow",
 )
 ip_address_treeview.configure(yscroll=ip_address_list_scrollbar.set)
 ip_address_list_scrollbar.grid(row=1, column=2, padx=0, pady=(5, 0), sticky="ns")
 
 ip_addresses: list[str] = ["127.0.0.1"]
+selected_ip_addresses: list[str] = []
 
 for index, ip_address in enumerate(iterable=ip_addresses):
     ip_address_treeview.insert(
         parent="", index="end", iid=index, text=ip_address, tags=("unchecked",)
     )
 
+
+def select_all():
+    for child_iid in ip_address_treeview.get_children():
+        ip_address_treeview.item(item=child_iid, tags=("checked",))
+
+
+def unselect_all():
+    for child_iid in ip_address_treeview.get_children():
+        ip_address_treeview.item(item=child_iid, tags=("unchecked",))
+
+
+def handle_checkbox_change(event):
+    item_iid = ip_address_treeview.identify_row(event.y)
+    item_text = ip_address_treeview.item(item=item_iid, option="text")
+
+    if ip_address_treeview.tag_has(tagname="checked", item=item_iid):
+        print(f"Selected IP Address: {item_text}")
+        if item_text not in selected_ip_addresses:
+            selected_ip_addresses.append(item_text)
+    elif item_text in selected_ip_addresses:
+        selected_ip_addresses.remove(item_text)
+
+
 ip_address_check_all_button = CTkButton(
     master=ip_address_list_frame,
     text="Select All",
     bg_color="transparent",
-    width=100,
+    width=90,
     height=25,
-    command=lambda: print("select all"),
+    command=select_all,
 )
 ip_address_check_all_button.grid(row=2, column=0, padx=5, pady=5)
 
@@ -208,11 +262,13 @@ ip_address_uncheck_all_button = CTkButton(
     text="Unselect All",
     bg_color="transparent",
     fg_color="#CD6464",
-    width=100,
+    width=90,
     height=25,
-    command=lambda: print("unselect all"),
+    command=unselect_all,
 )
 ip_address_uncheck_all_button.grid(row=2, column=1, padx=5, pady=5)
+
+ip_address_treeview.bind(sequence="<<TreeviewSelect>>", func=handle_checkbox_change)
 
 scan_option_frame = CTkFrame(
     master=left_frame, bg_color="transparent", fg_color="#123456"
@@ -225,7 +281,7 @@ scan_option_label = CTkLabel(
     text="Scan Option",
     font=("JetBrains Mono", 16, "bold"),
 )
-scan_option_label.grid(row=0, column=0, columnspan=2, pady=(30, 0), sticky="nsew")
+scan_option_label.grid(row=0, column=0, columnspan=2, pady=(25, 0), sticky="nsew")
 
 scan_option_protocol_label = CTkLabel(
     master=scan_option_frame,
@@ -234,14 +290,19 @@ scan_option_protocol_label = CTkLabel(
 )
 scan_option_protocol_label.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
 
-scan_protocols: list[str] = ["TCP", "UDP", "ICMP"]
-scan_variables: list = []
-scan_option_protocol = CTkCheckBox(
+scan_protocol_tcp = CTkCheckBox(
     master=scan_option_frame,
     text="TCP",
     font=("JetBrains Mono", 12, "bold"),
 )
-scan_option_protocol.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+scan_protocol_tcp.grid(row=2, column=0, padx=5, pady=5)
+
+scan_protocol_udp = CTkCheckBox(
+    master=scan_option_frame,
+    text="UDP",
+    font=("JetBrains Mono", 12, "bold"),
+)
+scan_protocol_udp.grid(row=3, column=0, padx=5, pady=5)
 
 scan_option_mode_label = CTkLabel(
     master=scan_option_frame,
@@ -250,25 +311,25 @@ scan_option_mode_label = CTkLabel(
 )
 scan_option_mode_label.grid(row=1, column=1, padx=15, pady=5, sticky="nsew")
 
-scan_option_mode_radio_var = IntVar()
-scan_option_mode_radio1 = CTkRadioButton(
-    master=scan_option_frame, 
-    text="Quick", 
-    font=("JetBrains Mono", 12, "bold"), 
-    variable=scan_option_mode_radio_var,
+scan_mode_var = IntVar()
+scan_mode_fast = CTkRadioButton(
+    master=scan_option_frame,
+    text="Fast",
+    font=("JetBrains Mono", 12, "bold"),
+    variable=scan_mode_var,
     value=1,
 )
-scan_option_mode_radio1.grid(row=2, column=1, padx=5, pady=5, sticky="w")
-scan_option_mode_radio1.select()
+scan_mode_fast.grid(row=2, column=1, padx=5, pady=5)
+scan_mode_fast.select()
 
-scan_option_mode_radio2 = CTkRadioButton(
-    master=scan_option_frame, 
-    text="Full", 
-    font=("JetBrains Mono", 12, "bold"), 
-    variable=scan_option_mode_radio_var,
-    value=2
+scan_mode_full = CTkRadioButton(
+    master=scan_option_frame,
+    text="Full",
+    font=("JetBrains Mono", 12, "bold"),
+    variable=scan_mode_var,
+    value=2,
 )
-scan_option_mode_radio2.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+scan_mode_full.grid(row=3, column=1, padx=5, pady=5)
 
 scan_button = CTkButton(
     master=scan_option_frame,
@@ -282,17 +343,23 @@ scan_button = CTkButton(
     fg_color="#FEDCBA",
     command=lambda: scan(),
 )
-scan_button.grid(row=4, column=0, columnspan=2, padx=5, pady=35, sticky="nsew")
+scan_button.grid(row=4, column=0, columnspan=2, padx=5, pady=15, sticky="nsew")
 
 
-right_frame = CTkFrame(master=app, width=640, height=720, fg_color="#E3E3E3")
+right_frame = CTkFrame(
+    master=app,
+    width=640,
+    height=720,
+    bg_color="#E3E3E3",
+    fg_color="#E3E3E3",
+)
 right_frame.pack(side="right", fill="both", expand=True)
 
 top_frame = CTkFrame(
     master=right_frame,
     width=640,
     height=60,
-    bg_color="transparent",
+    bg_color="#ABCDEF",
     fg_color="#ABCDEF",
     corner_radius=0,
 )
@@ -310,56 +377,124 @@ scan_result_frame = CTkFrame(
     master=right_frame,
     width=620,
     height=500,
-    bg_color="transparent",
+    bg_color="#FFFFFF",
     fg_color="#FFFFFF",
     corner_radius=0,
 )
 scan_result_frame.pack(pady=25, padx=0, anchor="center")
 
-scan_result_tree_columns = ("ip_address", "protocol", "description", "status")
-scan_result_tree = Treeview(
-    master=scan_result_frame,
-    columns=scan_result_tree_columns,
-    show="headings",
+treeview_style = Style()
+treeview_style.configure(
+    style="Treeview",
+    font=("JetBrains Mono", 9),
+    rowheight=25,
 )
 
-scan_result_tree.column("ip_address", width=100, minwidth=100, stretch=False)
-scan_result_tree.column("protocol", width=60, minwidth=60, stretch=False)
-scan_result_tree.column("description", width=300, minwidth=300, stretch=False)
-scan_result_tree.column("status", width=50, minwidth=50, stretch=False)
+#! TODO: This is just a dummy data, replace it with actual scan results
+scan_results = [
+    # {
+    #     "ipaddr": "127.0.0.1",
+    #     "tcp_ports": [
+    #         {"port": 135, "status": "Open"},
+    #         {"port": 445, "status": "Open"},
+    #         {"port": 1462, "status": "Open"},
+    #         {"port": 2179, "status": "Open"},
+    #         {"port": 4808, "status": "Open"},
+    #         {"port": 5040, "status": "Open"},
+    #         {"port": 5432, "status": "Open"},
+    #         {"port": 8974, "status": "Open"},
+    #         {"port": 9080, "status": "Open"},
+    #         {"port": 9100, "status": "Open"},
+    #         {"port": 9180, "status": "Open"},
+    #     ],
+    # },
+    # {
+    #     "ipaddr": "192.168.1.1",
+    #     "tcp_ports": [
+    #         {"port": 135, "status": "Open"},
+    #         {"port": 445, "status": "Open"},
+    #         {"port": 1462, "status": "Open"},
+    #         {"port": 2179, "status": "Open"},
+    #         {"port": 9080, "status": "Open"},
+    #         {"port": 9100, "status": "Open"},
+    #         {"port": 9180, "status": "Open"},
+    #     ],
+    # }
+]
 
-scan_result_tree.heading("ip_address", text="IP Address", anchor="w")
-scan_result_tree.heading("protocol", text="Protocol", anchor="w")
-scan_result_tree.heading("description", text="Description", anchor="w")
-scan_result_tree.heading("status", text="Status", anchor="w")
+scan_result_tree = Treeview(master=scan_result_frame, style="Treeview")
+scan_result_tree.grid(row=0, column=0, sticky="nsew")
+
+scan_result_tree["columns"] = ("port", "protocol", "description")
+scan_result_tree.column(column="#0", width=110, minwidth=110, stretch=False)
+scan_result_tree.column(column="port", width=60, minwidth=60)
+scan_result_tree.column(column="protocol", width=60, minwidth=60)
+scan_result_tree.column(column="description", width=270, minwidth=270)
+
+scan_result_tree.heading(column="#0", text="IP Address", anchor="c")
+scan_result_tree.heading(column="port", text="Port", anchor="c")
+scan_result_tree.heading(column="protocol", text="Protocol", anchor="c")
+scan_result_tree.heading(column="description", text="Description", anchor="c")
+
+
+port_descriptions = {}
+with open(file=r"ports_list/tcp.csv", mode="r") as port_list:
+    reader = csv.reader(port_list)
+    next(reader)
+    for row in reader:
+        protocol, port, description = row
+        port_descriptions[port] = description
+
+
+def insert_data():
+    for i, ip_address in enumerate(iterable=scan_results):
+        desp = "Open Port(s) : " + str(ip_address["tcp_ports"].__len__())
+        ip_iid = scan_result_tree.insert(
+            parent="", 
+            index="end",
+            text=ip_address["ipaddr"],
+            value=("", "", desp)
+        )
+        
+        for j, port_data in enumerate(iterable=ip_address["tcp_ports"]):
+            port = str(port_data["port"])
+            description = port_descriptions.get(port, "Unknown")
+            scan_result_tree.insert(
+            parent=ip_iid, index="end", values=(port, protocol, description)
+        )
+
+insert_data()
 
 
 def item_selected(event):
     for selected_item in scan_result_tree.selection():
-        item = scan_result_tree.item(selected_item)
+        item = scan_result_tree.item(item=selected_item)
         record = item["values"]
-        messagebox.showinfo(title="Information", message=",".join(record))
+        messagebox.showinfo(title="Scan Result", message=", ".join(record))
 
 
-scan_result_tree.bind("<<TreeviewSelect>>", item_selected)
-scan_result_tree.grid(row=0, column=0, sticky="nsew")
+# scan_result_tree.bind("<<TreeviewSelect>>", func=item_selected)
 
 scrollbar = Scrollbar(
-    master=scan_result_frame, orient="vertical", command=scan_result_tree.yview
+    master=scan_result_frame,
+    orient="vertical",
+    command=scan_result_tree.yview,
+    style="TScrollbar",
+    cursor="arrow",
 )
 scan_result_tree.configure(yscrollcommand=scrollbar.set)
 scrollbar.grid(row=0, column=1, sticky="ns")
 
-scan_results = [(f"192.168.1.{n}", "TCP", "MSRPC", "Open") for n in range(1, 20)]
-for scan_result in scan_results:
-    scan_result_tree.insert(parent="", index="end", values=scan_result)
+# scan_results = []
+# for scan_result in scan_results:
+#     scan_result_tree.insert(parent="", index="end", values=scan_result)
 
 
 bottom_frame = CTkFrame(
     master=right_frame,
     width=640,
     height=90,
-    bg_color="transparent",
+    bg_color="#ABCDEF",
     fg_color="#ABCDEF",
     corner_radius=0,
 )

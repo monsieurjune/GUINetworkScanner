@@ -31,6 +31,7 @@ opt-level = 0
 lazy_static = "1.4.0"
 json = "0.12"
 pnet = "0.34"
+rand = "^0"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.104", default-features = false, features = ["alloc"] }
 network-interface = "1.1.1"
