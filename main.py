@@ -1,5 +1,5 @@
 import csv
-
+import time;
 from tkinter import messagebox
 from tkinter.ttk import Treeview, Scrollbar, Style
 from ttkwidgets import CheckboxTreeview
@@ -17,13 +17,21 @@ from customtkinter import (
     IntVar,
 )
 
+passwd = r""
+
 from utils import interface, scanner, probe
 
+def find_addr_of_select_interface():
+    select = network_interface_dropdown.get()
+    for inter in network_interface_json["interface"]:
+        if inter["name"] == select:
+            return inter["addr"]
+    return None
 
 def probe_update():
     json_set = probe.get_ip_subset(
         interface_info=network_interface_json,
-        interface_name=select_interface.get(),
+        interface_name=network_interface_dropdown.get(),
         subset_no=16,
     )
     ip_address_treeview.delete(*ip_address_treeview.get_children())
@@ -33,22 +41,27 @@ def probe_update():
     ip_address_treeview.update()
 
     j = 1
+    select_ip = find_addr_of_select_interface()
+    if select_ip is None:
+        return
     for subset in json_set["subset"]:
-        probe_result = probe.probe_subset(subset=subset)
+        probe_result = probe.probe_subset(subset=subset, inter_addr=select_ip, passwd=passwd)
         for res in probe_result["addr_set"]:
             ip_address_treeview.insert(
                 parent="", index="end", iid=j, text=res, tags=("unchecked")
             )
             ip_address_treeview.update()
             j += 1
+        time.sleep(1)
 
 
 def insert_ipaddr():
     member = ip_address_treeview.get_children()
     value = ip_address_entry.get()
-    value_json = json.dumps({"name": select_interface.get(), "addr_set": [value]})
+    value_json = json.dumps({"name": network_interface_dropdown.get(), "addr_set": [value]})
+    select_ip = find_addr_of_select_interface()
 
-    result = probe.probe_subset(subset=json.loads(value_json))
+    result = probe.probe_subset(subset=json.loads(value_json), inter_addr=select_ip, passwd=passwd)
     if result is None:
         messagebox.showinfo(title="Error", message=f"{value} not found")
         return
@@ -156,7 +169,7 @@ network_interface_dropdown = CTkComboBox(
     font=("JetBrains Mono", 11),
     dropdown_font=("JetBrains Mono", 13),
     state="readonly",
-    variable=StringVar(value=network_interfaces[0]),
+    variable=select_interface
 )
 network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 
