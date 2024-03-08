@@ -90,7 +90,7 @@ fn tcp_ping(dst: Ipv4Addr, src: Ipv4Addr, dst_port: u16, src_port: u16)
 pub fn ping(dst: Ipv4Addr, src: Ipv4Addr, src_port: u16)
 {
     let mut rng = rand::thread_rng();
-    let port_list: Vec<u16> = (0..8).map(|_| rng.gen_range(0..65535)).collect();
+    let port_list: Vec<u16> = (0..3).map(|_| rng.gen_range(0..65535)).collect();
 
     tcp_ping(dst, src, 135, src_port);
     tcp_ping(dst, src, 445, src_port);
