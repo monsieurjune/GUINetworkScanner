@@ -1,3 +1,4 @@
+use pnet::packet::tcp::TcpPacket;
 use serde::{
     Deserialize,
     Serialize
@@ -6,6 +7,7 @@ use std::thread::{
     Builder, 
     JoinHandle
 };
+use std::time::Duration;
 use serde_json::to_string;
 use std::process;
 
@@ -32,8 +34,12 @@ use pnet::packet::{
         TcpFlags
     }
 };
+use std::time::SystemTime;
 
-use pnet::datalink::{self, NetworkInterface};
+use std::sync::mpsc::{
+    self, channel, Receiver, Sender
+};
+use pnet::datalink::{self, DataLinkReceiver, NetworkInterface};
 use pnet::datalink::Channel::Ethernet;
 use pnet::packet::{Packet, MutablePacket};
 use pnet::packet::ethernet::{EthernetPacket, MutableEthernetPacket};
@@ -49,47 +55,64 @@ pub struct Prober {
 }
 
 impl Prober {
-    fn thread_builder(
-        &self,
-        addr: Ipv4Addr,
-        thread_id: usize,
-    ) -> JoinHandle<Option<Ipv4Addr>> {
+    fn thread_builder(&self, addr: Ipv4Addr) -> JoinHandle<()> 
+    {
         let builder: Builder = Builder::new()
-            .name(thread_id.to_string())
             .stack_size(32 * 1024);
 
         match builder.spawn(move || {
-            window_ping::ping(addr)
-        }) {
+            window_ping::ping(addr);
+        }) 
+        {
             Ok(handler) => handler,
-            Err(e) => {
-                eprintln!("Thread Allocation failed due to {:?}", e);
+            Err(_) => {
                 process::exit(12);
             }
         }
     }
 
-    fn join_result(handler: JoinHandle<Option<Ipv4Addr>>) -> Option<Ipv4Addr>
+    fn thread_joiner(handler_list: Vec<JoinHandle<()>>)
     {
-        match handler.join() {
-            Ok(val) => val,
-            Err(_) => None
+        for handler in handler_list {
+            let _ = handler.join();
         }
     }
 
-    fn thread_joiner(handler_list: Vec<JoinHandle<Option<Ipv4Addr>>>) -> Vec<Ipv4Addr>
+    fn get_probe_result(mut e_rx: Box<dyn DataLinkReceiver>, 
+                        input_subset: Vec<Ipv4Addr>, 
+                        res_t: Sender<Vec<Ipv4Addr>>,
+                        time_t: Sender<bool>,
+                    ) -> Result<JoinHandle<()>, ()>
     {
-        let mut result_vec: Vec<Ipv4Addr> = Vec::with_capacity(256);
+        let builder: Builder = Builder::new().stack_size(32 * 1024);
 
-        for handler in handler_list {
-            match Prober::join_result(handler) {
-                Some(val) => {
-                    result_vec.push(val);
+        match builder.spawn(
+            move || {
+                let mut result: Vec<Ipv4Addr> = Vec::new();
+                let start = SystemTime::now();
+                let mut now = SystemTime::now();
+                while now.duration_since(start).unwrap().as_secs() <= 2 {
+                            match e_rx.next() {
+                                Ok(ether_packet) => {
+                                    let packet = EthernetPacket::new(ether_packet).unwrap();
+                                    let mut ip_pack = packet.payload().to_owned();
+                                    let ip_pack1 = Ipv4Packet::new(&mut ip_pack).unwrap();
+                                    let source_addr = ip_pack1.get_source();
+                                    println!("{} -> {}", source_addr, ip_pack1.get_destination());
+                                    if input_subset.contains(&source_addr) {
+                                        result.push(source_addr);
+                                    }
+                                }
+                                Err(_) => {}
+                            }
+                    now = SystemTime::now();
                 }
-                None => {}
+                let _ = res_t.send(result);
             }
+        ) {
+            Ok(handler) => Ok(handler),
+            Err(_) => Err(())
         }
-        result_vec
     }
 
     fn find_match_interface(inter_addr: Ipv4Addr) -> Result<NetworkInterface, ()>
@@ -107,32 +130,44 @@ impl Prober {
         }
     }
 
-    pub fn probe(&self, inter_addr: Ipv4Addr) -> Result<String, ()> {
-        let length: usize = self.addr_set.len();
-        let result_list: Vec<Ipv4Addr>;
-        let prober_res: Prober;
-        let mut handler: JoinHandle<Option<Ipv4Addr>>;
-        let mut handler_list: Vec<JoinHandle<Option<Ipv4Addr>>> = Vec::new();
-        let interface: NetworkInterface = Prober::find_match_interface(inter_addr)?;
-
-        let (mut e_tx, mut e_rx) = match datalink::channel(&interface, Default::default()){
-            Ok(Ethernet(tx, rx)) => Ok((tx, rx)),
-            Ok(_) => Err(()),
-            Err(_) => Err(())
-        }?;
-
-        for i in 0..length {
-            handler = Prober::thread_builder(&self, self.addr_set[i].clone(), i);
-            handler_list.push(handler)
-        }
-        result_list = Prober::thread_joiner(handler_list);
-        prober_res = Prober {
-            name: self.name.clone(),
-            addr_set: result_list
+    fn probe_to_json(name: String, addr_set: Vec<Ipv4Addr>) -> Result<String, ()>
+    {
+        let res: Prober = Prober {
+            name,
+            addr_set
         };
-        match to_string(&prober_res) {
+        match to_string(&res) {
             Ok(val) => Ok(val),
             Err(_) => Err(())
         }
+    }
+
+    pub fn probe(&self, inter_addr: Ipv4Addr) -> Result<String, ()> {
+        // let length: usize = self.addr_set.len();
+        let result_list: Vec<Ipv4Addr>;
+        let reciever_handler: JoinHandle<()>;
+        let mut handler: JoinHandle<()>;
+        let mut handler_list: Vec<JoinHandle<()>> = Vec::new();
+        let interface: NetworkInterface = Prober::find_match_interface(inter_addr)?;
+        let (res_t, res_r) = channel();
+        let (time_t, time_r) = channel();
+
+        let (_, e_rx) = match datalink::channel(&interface, Default::default()){
+            Ok(Ethernet(tx, rx)) => Ok((tx, rx)),
+            _ => Err(())
+        }?;
+
+        reciever_handler = Prober::get_probe_result(e_rx, self.addr_set.clone(), res_t.clone(), time_t.clone())?;
+        for host in &self.addr_set {
+            handler = Prober::thread_builder(&self, host.clone());
+            handler_list.push(handler);
+        }
+        Prober::thread_joiner(handler_list);
+        let _ = reciever_handler.join();
+        result_list = match res_r.recv() {
+            Ok(val) => Ok(val),
+            Err(_) => Err(())
+        }?;
+        Prober::probe_to_json(self.name.clone(), result_list)
     }
 }
