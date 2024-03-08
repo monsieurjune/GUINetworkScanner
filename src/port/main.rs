@@ -1,63 +1,44 @@
 use std::env;
 use std::process;
-use std::str::Split;
+use std::net::Ipv4Addr;
+use std::str::FromStr;
 use host::Host;
 mod host;
 
-fn argv_to_list(argv: &[String]) -> Vec<(String, String, String)> {
-    let mut list: Vec<(String, String, String)> = Vec::new();
-    let mut val1: String;
-    let mut val2: String;
-    let mut val3: String;
-    let mut str_array: Split<&'static str>;
-
-    for arg in argv {
-        str_array = arg.split(",");
-        val1 = match str_array.nth(0) {
-            Some(str) => str.to_string(),
-            None => String::from(""),
-        };
-        val2 = match str_array.nth(0) {
-            Some(str) => str.to_string(),
-            None => String::from(""),
-        };
-        val3 = match str_array.nth(0) {
-            Some(str) => str.to_string(),
-            None => String::from(""),
-        };
-        list.push((val1, val2, val3));
-    }
-    return list;
-}
+// port tcp fast 192.168.1.1 interface
 
 fn main() -> std::io::Result<()> {
-    let list: Vec<(String, String, String)>;
+    // let list: Vec<(String, String, String)>;
     let argv: Vec<String> = env::args().collect();
-    let mut host_list: Vec<Host> = Vec::new();
+    let host: Host;
+    let inter_addr: Ipv4Addr;
+    let host_ip: Ipv4Addr;
+    // let mut host_list: Vec<Host> = Vec::new();
 
-    if argv.len() <= 0 {
+    if argv.len() != 5 {
         process::exit(255)
     }
-
-    list = argv_to_list(&argv[1..]);
-    for val in list {
-        match Host::new(&val.0, &val.1, &val.2) {
-            Ok(host) => host_list.push(host),
-            Err(_) => {
-                process::exit(255)
-            },
+    host_ip = match Ipv4Addr::from_str(&argv[3]) {
+        Ok(val) => val,
+        Err(_) => {
+            process::exit(255);
         }
-    }
-    for a_host in &host_list {
-        match a_host.tcp_connect_scan() {
-            Ok(val) => {
-                if let Some(res) = val {
-                    println!("{}", res);
-                };
-            }
-            Err(_) => {
-                process::exit(255);
-            }
+    };
+    inter_addr = match Ipv4Addr::from_str(&argv[4]) {
+        Ok(val) => val,
+        Err(_) => {
+            process::exit(255);
+        }
+    };
+    host = match Host::new(host_ip, inter_addr, &argv[1], &argv[2]) {
+        Ok(val) => val,
+        Err(_) => {
+            process::exit(255);
+        }
+    };
+    if let Ok(res) = host.tcp_connect_scan() {
+        if let Some(res1) = res {
+            println!("{}", res1);
         }
     }
     Ok(())
