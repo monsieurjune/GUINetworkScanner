@@ -23,11 +23,13 @@ from utils import interface, scanner, probe
 scan_results: list = []
 ip_addresses: list[str] = ["127.0.0.1"]
 selected_ip_addresses: list[str] = []
-port_descriptions = {}
+
+port_descriptions: dict = {}
+port_service: dict = {}
 
 
-app = CTk()
-app.geometry(geometry_string="960x720")
+app = CTk(fg_color="#123456")
+app.geometry(geometry_string="1280x720")
 app.resizable(width=False, height=False)
 app.title(string="Network Scanner Tool with Rust")
 
@@ -41,8 +43,9 @@ left_frame = CTkFrame(
     fg_color="#123456",
     corner_radius=0,
     border_width=0,
+    border_color="#123456",
 )
-left_frame.pack(side="left", fill="both", expand=True)
+left_frame.pack(side="left", fill="both", padx=15)
 
 ip_address_section = CTkFrame(
     master=left_frame, bg_color="transparent", fg_color="#123456"
@@ -194,7 +197,7 @@ ip_address_list_scrollbar = Scrollbar(
     cursor="arrow",
 )
 ip_address_treeview.configure(yscroll=ip_address_list_scrollbar.set)
-ip_address_list_scrollbar.grid(row=1, column=2, padx=0, pady=(5, 0), sticky="ns")
+ip_address_list_scrollbar.grid(row=1, column=2, pady=(5, 0), sticky="ns")
 
 for index, ip_address in enumerate(iterable=ip_addresses):
     ip_address_treeview.insert(
@@ -354,7 +357,7 @@ scan_button.grid(row=4, column=0, columnspan=2, padx=15, pady=15, sticky="nsew")
 ##### Right Frame #####
 right_frame = CTkFrame(
     master=app,
-    width=640,
+    width=960,
     height=720,
     bg_color="#E3E3E3",
     fg_color="#E3E3E3",
@@ -363,7 +366,7 @@ right_frame.pack(side="right", fill="both", expand=True)
 
 top_frame = CTkFrame(
     master=right_frame,
-    width=640,
+    width=960,
     height=60,
     bg_color="#ABCDEF",
     fg_color="#ABCDEF",
@@ -392,40 +395,66 @@ treeview_style.configure(
 scan_result_tree = Treeview(master=scan_result_frame, style="Treeview", height=20)
 scan_result_tree.grid(row=0, column=0, sticky="nsew")
 
-scan_result_tree["columns"] = ("protocol", "port", "description")
-scan_result_tree.column(column="#0", width=130, minwidth=130)
-scan_result_tree.column(column="protocol", width=60, minwidth=60)
+scan_result_tree["columns"] = ("protocol", "port", "service", "description")
+scan_result_tree.column(column="#0", width=150, minwidth=150)
+scan_result_tree.column(column="protocol", width=80, minwidth=80)
 scan_result_tree.column(column="port", width=60, minwidth=60)
-scan_result_tree.column(column="description", width=270, minwidth=270)
+scan_result_tree.column(column="service", width=180, minwidth=180)
+scan_result_tree.column(column="description", width=350, minwidth=350)
 
 scan_result_tree.heading(column="#0", text="IP Address", anchor="c")
 scan_result_tree.heading(column="protocol", text="Protocol", anchor="c")
 scan_result_tree.heading(column="port", text="Port", anchor="c")
+scan_result_tree.heading(column="service", text="Service", anchor="c")
 scan_result_tree.heading(column="description", text="Description", anchor="c")
-
-with open(file=r"ports_list/tcp.csv", mode="r") as port_list:
-    reader = csv.reader(port_list)
-    next(reader)
-    for row in reader:
-        protocol, port, description = row
-        port_descriptions[port] = description
 
 
 def insert_data():  # sourcery skip: remove-unused-enumerate
-    for _, ip_address in enumerate(iterable=scan_results):
-        desp = "Open Port(s) : " + str(object=ip_address["tcp_ports"].__len__())
-        ip_iid = scan_result_tree.insert(
-            parent="", index="end", text=ip_address["ipaddr"], value=("", "", desp)
-        )
+    with open(file=r"ports_list/ports_list.csv", mode="r") as port_list:
+        reader = csv.reader(port_list)
+        next(reader)
+        for row in reader:
+            protocol, port, service, description = row
+            port_descriptions[port] = description
+            port_service[port] = service
 
-        for _, port_data in enumerate(iterable=ip_address["tcp_ports"]):
-            port = str(object=port_data["port"])
-            description = port_descriptions.get(port, "Unassigned")
-            scan_result_tree.insert(
-                parent=ip_iid, index="end", values=(port, protocol, description)
-            )
+            for ip_address in scan_results:
+                desp = "    Open Port(s) : " + str(object=len(ip_address["tcp_ports"]))
+                ip_iid = scan_result_tree.insert(
+                    parent="",
+                    index="end",
+                    text=ip_address["ipaddr"],
+                    values=("", "", "", ""),
+                )
+
+                tcp_iid = scan_result_tree.insert(
+                    parent=ip_iid, index="end", values=("TCP", "", "", desp)
+                )
+                for port_data in ip_address["tcp_ports"]:
+                    port = str(object=port_data["port"])
+                    description = port_descriptions.get(port, "Unassigned")
+                    service = port_service.get(port, "Unassigned")
+                    scan_result_tree.insert(
+                        parent=tcp_iid,
+                        index="end",
+                        values=("", port, service, description),
+                    )
+
+                udp_iid = scan_result_tree.insert(
+                    parent=ip_iid, index="end", values=("UDP", "", "", desp)
+                )
+                for port_data in ip_address["tcp_ports"]:
+                    port = str(object=port_data["port"])
+                    description = port_descriptions.get(port, "Unassigned")
+                    service = port_service.get(port, "Unassigned")
+                    scan_result_tree.insert(
+                        parent=udp_iid,
+                        index="end",
+                        values=("", port, service, description),
+                    )
 
         scan_result_tree.after(ms=100, func=scan_result_tree.update())
+
     messagebox.showinfo(title="Scan", message="Scan Completed!")
 
 
@@ -441,7 +470,7 @@ scrollbar.grid(row=0, column=1, sticky="ns")
 
 bottom_frame = CTkFrame(
     master=right_frame,
-    width=640,
+    width=960,
     height=90,
     bg_color="#ABCDEF",
     fg_color="#ABCDEF",
