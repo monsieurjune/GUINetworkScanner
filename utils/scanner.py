@@ -17,10 +17,6 @@ def tcp_scan(ipaddr, mode):
 
 
 def main():
-    # result = get_result()
-    # print(result)
-    # with open("result.txt", "w") as f:
-    #     json.dump(result, f, indent=4)
     pass
 
 

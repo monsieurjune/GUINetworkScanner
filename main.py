@@ -406,15 +406,27 @@ def insert_data():  # sourcery skip: remove-unused-enumerate
             port = str(object=port_data["port"])
             description = port_descriptions.get(port, "Unassigned")
             service = port_service.get(port, "Unassigned")
-            scan_result_tree.insert(
+            value = port_data["value"]
+            port_iid = scan_result_tree.insert(
                 parent=ip_iid,
                 index="end",
-                values=("TCP", port, service, description),
+                values=("TCP", port, service, description, value),
             )
 
         scan_result_tree.after(ms=100, func=scan_result_tree.update())
 
     messagebox.showinfo(title="Scan", message="Scan Completed!")
+
+
+def item_selected(event):
+    for selected_item in scan_result_tree.selection():
+        item = scan_result_tree.item(option="value", item=selected_item)
+        if item.__len__() == 5:
+            record = item[4]
+            messagebox.showinfo(title="Additional Information", message=record)
+
+
+scan_result_tree.bind(sequence="<<TreeviewSelect>>", func=item_selected)
 
 
 scrollbar = Scrollbar(
