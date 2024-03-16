@@ -116,7 +116,6 @@ network_interface_label.grid(row=0, column=0, padx=5, pady=(10, 0), sticky="w")
 
 network_interface_json = interface.interface_info()
 network_interfaces: list[str] = interface.get_interfaces_name()
-selected_interface = StringVar(value=network_interfaces[0])
 network_interface_dropdown = CTkComboBox(
     master=network_interface_section,
     values=network_interfaces,
@@ -133,7 +132,7 @@ network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 def probe_update():
     json_set = probe.get_ip_subset(
         interface_info=network_interface_json,
-        interface_name=selected_interface.get(),
+        interface_name=network_interface_dropdown.get(),
         subset_no=16,
     )
     ip_address_treeview.delete(*ip_address_treeview.get_children())
