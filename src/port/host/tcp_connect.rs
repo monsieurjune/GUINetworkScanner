@@ -18,7 +18,9 @@ pub fn scan(ip: &IpAddr, subset: Vec<u16>) -> Vec<(u16, String, String)> {
                     Ok(_) => {
                         port_status.push((port, String::from("Open"), recv_str.clone()));
                     }
-                    Err(_) => {}
+                    Err(_) => {
+                        port_status.push((port, String::from("Open"), String::from("")));
+                    }
                 }
             }
             Err(_) => {}
