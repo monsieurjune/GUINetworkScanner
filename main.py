@@ -71,7 +71,7 @@ ip_address_entry.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 def insert_ipaddr():
     member = ip_address_treeview.get_children()
     value = ip_address_entry.get()
-    value_json = json.dumps({"name": selected_interface.get(), "addr_set": [value]})
+    value_json = json.dumps({"name": network_interface_dropdown.get(), "addr_set": [value]})
 
     result = probe.probe_subset(subset=json.loads(value_json))
     if result is None:
@@ -331,7 +331,7 @@ scan_button = CTkButton(
 scan_button.grid(row=4, column=0, columnspan=2, padx=15, pady=15, sticky="nsew")
 
 
-##### Right Frame #####
+##### Right Framedocker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag #####
 right_frame = CTkFrame(
     master=app,
     width=960,
