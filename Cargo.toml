@@ -30,7 +30,6 @@ opt-level = 0
 [dependencies]
 lazy_static = "1.4.0"
 json = "0.12"
-xenet = "0.5"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.104", default-features = false, features = ["alloc"] }
 network-interface = "1.1.1"
