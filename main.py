@@ -20,7 +20,7 @@ from customtkinter import (
 
 passwd = r""
 
-from utils import interface, scanner, probe, passwd
+from utils import interface, scanner, probe, password
 
 def find_addr_of_select_interface():
     select = network_interface_dropdown.get()
@@ -112,11 +112,12 @@ app.title(string="Network Scanner Tool with Rust")
 
 
 def login(window):
-    password = password_entry.get()
-    state = passwd.check_password(password)
+    input_password = password_entry.get()
+    state = password.check_password(input_password)
     window.destroy()
     if state != 0:
-        exit(255)
+        exit(1)
+    passwd = password
 
 login_password = ""
 top_level = CTkToplevel(master=app)

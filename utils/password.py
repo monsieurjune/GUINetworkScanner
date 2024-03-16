@@ -1,7 +1,11 @@
 import subprocess
 
 def check_password(check_passwd):
-    cmd = [
+    cmd1 = [
+        "echo",
+        check_passwd
+    ]
+    cmd2 = [
         "sudo",
         "-S",
         "ls"

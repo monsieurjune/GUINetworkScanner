@@ -32,8 +32,8 @@ def probe_subset(subset, inter_addr, passwd):
     ]
 
     # print("Start : ", subset)
-    result1 = subprocess.Popen(args=cmd1, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    output = subprocess.check_output(cmd2, stdin=result1.stdout, stderr=subprocess.DEVNULL)
+    result1 = subprocess.Popen(args=cmd1, stdout=subprocess.PIPE)
+    output = subprocess.check_output(cmd2, stdin=result1.stdout)
     # print("End : ", output)
     exit_code = result1.wait()
 
