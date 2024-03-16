@@ -29,7 +29,8 @@ pub enum HostError {
 #[derive(Serialize, Deserialize)]
 pub struct ScanResultInfo {
     port: u16,
-    status: String
+    status: String,
+    value: String
 }
 
 #[derive(Serialize, Deserialize)]
@@ -57,7 +58,8 @@ impl Host {
         ip_str: &String,
         tcp_choice: &String,
         udp_choice: &String,
-    ) -> Result<Host, HostError> {
+    ) -> Result<Host, HostError> 
+    {
         let tcp_result: Mode;
         let udp_result: Mode;
         let ip_res: IpAddr;
@@ -82,7 +84,7 @@ impl Host {
         )
     }
 
-    fn portlist_to_scaninfo(port_result: Vec<(u16, String)>) -> Vec<ScanResultInfo>
+    fn portlist_to_scaninfo(port_result: Vec<(u16, String, String)>) -> Vec<ScanResultInfo>
     {
         let mut infos: Vec<ScanResultInfo> = Vec::new();
         let mut info: ScanResultInfo;
@@ -91,16 +93,18 @@ impl Host {
         {
             info = ScanResultInfo {
                 port: res.0,
-                status: res.1
+                status: res.1,
+                value: res.2
             };
             infos.push(info);
         }
         infos
     }
 
-    fn portlist_to_json(&self, 
-                        port_result: Vec<(u16, String)>
-                    ) -> Result<String, serde_json::Error> 
+    fn portlist_to_json(
+        &self, 
+        port_result: Vec<(u16, String, String)>
+    ) -> Result<String, serde_json::Error> 
     {
         let format = ScanResult {
             ipaddr: self.ip.clone(),
@@ -113,7 +117,8 @@ impl Host {
         &self,
         obj_mode: &Option<ScanMode>,
         func: thread_utils::ScanFunc,
-    ) -> Vec<(u16, String)> {
+    ) -> Vec<(u16, String, String)> 
+    {
         let ip = self.ip.clone();
         let mode: &ScanMode = &obj_mode.as_ref().unwrap();
         let n: u16 = mode.subset_len();
@@ -130,8 +135,7 @@ impl Host {
     }
 
     pub fn tcp_connect_scan(&self) -> Result<Option<String>, serde_json::Error>  {
-        let ports_list: Vec<(u16, String)>;
-        // let nothing: ScanResult;
+        let ports_list: Vec<(u16, String, String)>;
 
         if self.tcp_mode.is_none() {
             return Ok(None);

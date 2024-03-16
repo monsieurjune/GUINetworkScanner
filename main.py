@@ -116,7 +116,6 @@ network_interface_label.grid(row=0, column=0, padx=5, pady=(10, 0), sticky="w")
 
 network_interface_json = interface.interface_info()
 network_interfaces: list[str] = interface.get_interfaces_name()
-selected_interface = StringVar(value=network_interfaces[0])
 network_interface_dropdown = CTkComboBox(
     master=network_interface_section,
     values=network_interfaces,
@@ -133,7 +132,7 @@ network_interface_dropdown.grid(row=1, column=0, padx=5, pady=0, sticky="w")
 def probe_update():
     json_set = probe.get_ip_subset(
         interface_info=network_interface_json,
-        interface_name=selected_interface.get(),
+        interface_name=network_interface_dropdown.get(),
         subset_no=16,
     )
     ip_address_treeview.delete(*ip_address_treeview.get_children())
@@ -406,15 +405,27 @@ def insert_data():  # sourcery skip: remove-unused-enumerate
             port = str(object=port_data["port"])
             description = port_descriptions.get(port, "Unassigned")
             service = port_service.get(port, "Unassigned")
-            scan_result_tree.insert(
+            value = port_data["value"]
+            port_iid = scan_result_tree.insert(
                 parent=ip_iid,
                 index="end",
-                values=("TCP", port, service, description),
+                values=("TCP", port, service, description, value),
             )
 
         scan_result_tree.after(ms=100, func=scan_result_tree.update())
 
     messagebox.showinfo(title="Scan", message="Scan Completed!")
+
+
+def item_selected(event):
+    for selected_item in scan_result_tree.selection():
+        item = scan_result_tree.item(option="value", item=selected_item)
+        if item.__len__() == 5:
+            record = item[4]
+            messagebox.showinfo(title="Additional Information", message=record)
+
+
+scan_result_tree.bind(sequence="<<TreeviewSelect>>", func=item_selected)
 
 
 scrollbar = Scrollbar(
